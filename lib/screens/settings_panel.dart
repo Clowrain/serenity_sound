@@ -245,40 +245,93 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
   }
 
   Future<void> _addSource(String url) async {
-    setState(() {
-      _isLoading = true;
-      _loadingMessage = '正在加载配置文件...';
-    });
-
-    final result = await ref.read(remoteSourceServiceProvider.notifier).addSource(url);
-
-    setState(() {
-      _isLoading = false;
-      _loadingMessage = null;
-    });
-
+    // 进度通知器
+    final progressNotifier = ValueNotifier<String>('准备下载...');
+    
+    // 显示进度对话框
     if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF161616),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 24),
+            ValueListenableBuilder<String>(
+              valueListenable: progressNotifier,
+              builder: (context, value, child) {
+                return Text(
+                  value,
+                  style: const TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
 
-    if (result.isSuccess) {
-      String message = '成功添加 ${result.added.length} 个音效';
-      if (result.hasConflicts) {
-        message += '\n跳过 ${result.skipped.length} 个冲突音效';
+    try {
+      final result = await ref.read(remoteSourceServiceProvider.notifier).addSource(
+        url,
+        onProgress: (message) {
+          progressNotifier.value = message;
+        },
+      );
+
+      // 关闭进度对话框
+      if (mounted) Navigator.pop(context);
+
+      if (!mounted) return;
+
+      if (result.isSuccess) {
+        String message = '成功添加 ${result.added.length} 个音效';
+        if (result.hasConflicts) {
+          message += '\n跳过 ${result.skipped.length} 个冲突音效';
+        }
+        
+        // 如果有失败的（部分成功）
+        if (result.hasFailures) {
+          message += '\n${result.failed.length} 个音效下载失败';
+          _showFailureDialog(result.failed);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: result.hasFailures
+                ? Colors.orange.withOpacity(0.8)
+                : const Color(0xFF38f9d7).withOpacity(0.8),
+          ),
+        );
+      } else {
+        // 完全失败
+        if (result.hasFailures) {
+          _showFailureDialog(result.failed);
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? '加载失败'),
+            backgroundColor: Colors.redAccent.withOpacity(0.8),
+          ),
+        );
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: result.hasConflicts
-              ? Colors.orange.withOpacity(0.8)
-              : const Color(0xFF38f9d7).withOpacity(0.8),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? '加载失败'),
-          backgroundColor: Colors.redAccent.withOpacity(0.8),
-        ),
-      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // 确保关闭 dialog
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('发生错误: $e'),
+            backgroundColor: Colors.redAccent.withOpacity(0.8),
+          ),
+        );
+      }
     }
   }
 
@@ -308,6 +361,68 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
               }
             },
             child: const Text('删除', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFailureDialog(Map<String, String> failures) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF161616),
+        title: const Text(
+          '下载未完成',
+          style: TextStyle(color: Colors.orangeAccent, fontSize: 16),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '以下 ${failures.length} 个音效下载失败：',
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: failures.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white10),
+                  itemBuilder: (context, index) {
+                    final entry = failures.entries.elementAt(index);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entry.key,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            entry.value,
+                            style: const TextStyle(color: Colors.white38, fontSize: 11),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('了解'),
           ),
         ],
       ),

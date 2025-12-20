@@ -11,15 +11,18 @@ import 'storage_service.dart';
 class LoadResult {
   final List<SoundEffect> added;
   final List<SoundEffect> skipped;
+  final Map<String, String> failed; // soundName -> error
   final String? error;
 
   LoadResult({
     this.added = const [],
     this.skipped = const [],
+    this.failed = const {},
     this.error,
   });
 
   bool get hasConflicts => skipped.isNotEmpty;
+  bool get hasFailures => failed.isNotEmpty;
   bool get isSuccess => error == null;
 }
 
@@ -34,8 +37,15 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
       : super(_storage.getRemoteSources());
 
   /// 添加远程来源
-  Future<LoadResult> addSource(String url, {String? customName}) async {
+  Future<LoadResult> addSource(
+    String url, {
+    String? customName,
+    void Function(String message)? onProgress,
+  }) async {
     try {
+      onProgress?.call('正在加载配置文件...');
+      print('RemoteSourceService: Starting to load URL: $url');
+      
       // 1. 下载配置文件
       final response = await _dio.get(url);
       final List<dynamic> remoteList;
@@ -45,43 +55,76 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
       } else {
         remoteList = response.data;
       }
-
+      
       // 2. 获取当前所有音效 ID
       final currentSounds = _ref.read(soundListProvider);
       final existingIds = currentSounds.map((s) => s.id).toSet();
 
-      // 3. 处理冲突
+      // 3. 准备下载
       final sourceId = const Uuid().v4();
       final added = <SoundEffect>[];
       final skipped = <SoundEffect>[];
+      final failed = <String, String>{};
       final soundIds = <String>[];
+      
+      int totalItems = remoteList.length;
+      int processed = 0;
 
       for (final json in remoteList) {
-        final sound = SoundEffect.fromJson(Map<String, dynamic>.from(json));
+        processed++;
+        // 解析基本信息（此时 path 是 URL）
+        final rawSound = SoundEffect.fromJson(Map<String, dynamic>.from(json));
         
-        if (existingIds.contains(sound.id)) {
-          skipped.add(sound);
-        } else {
-          // 标记为远程音效
-          final remoteSound = SoundEffect(
-            id: sound.id,
-            name: sound.name,
-            svgPath: sound.svgPath,
-            audioPath: sound.audioPath,
-            themeColor: sound.themeColor,
-            volume: sound.volume,
+        onProgress?.call('正在下载资源 ($processed/$totalItems): ${rawSound.name}');
+        
+        if (existingIds.contains(rawSound.id)) {
+          skipped.add(rawSound);
+          continue;
+        }
+
+        try {
+          // 下载音频
+          final localAudioPath = await _cacheService.getOrDownloadAudio(
+            rawSound.audioPath,
+            rawSound.id,
+          );
+          
+          // 下载 SVG
+          final localSvgPath = await _cacheService.getOrDownloadSvg(
+            rawSound.svgPath,
+            rawSound.id,
+          );
+
+          // 创建指向本地文件的 SoundEffect
+          final localSound = SoundEffect(
+            id: rawSound.id,
+            name: rawSound.name,
+            svgPath: localSvgPath,   // 本地绝对路径
+            audioPath: localAudioPath, // 本地绝对路径
+            themeColor: rawSound.themeColor,
+            volume: rawSound.volume,
             isRemote: true,
             sourceId: sourceId,
           );
-          added.add(remoteSound);
-          soundIds.add(sound.id);
+
+          added.add(localSound);
+          soundIds.add(rawSound.id);
+        } catch (e) {
+          print('Failed to download assets for ${rawSound.name}: $e');
+          failed[rawSound.name] = e.toString();
+          continue;
         }
       }
 
       if (added.isEmpty) {
         return LoadResult(
           skipped: skipped,
-          error: skipped.isNotEmpty ? '所有音效都与本地冲突' : '配置文件为空',
+          failed: failed,
+          error: skipped.isNotEmpty && remoteList.isNotEmpty 
+              ? '所有音效都与本地冲突' 
+              : failed.isNotEmpty 
+                  ? '所有下载都失败了' 
+                  : '未成功下载任何有效音效',
         );
       }
 
@@ -101,10 +144,13 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
       // 6. 添加音效到列表
       _ref.read(soundListProvider.notifier).addRemoteSounds(added);
 
-      return LoadResult(added: added, skipped: skipped);
+      return LoadResult(added: added, skipped: skipped, failed: failed);
     } on DioException catch (e) {
+      print('RemoteSourceService: DioException: ${e.message}');
       return LoadResult(error: '网络错误: ${e.message}');
-    } catch (e) {
+    } catch (e, stack) {
+      print('RemoteSourceService: Error: $e');
+      print('RemoteSourceService: Stack: $stack');
       return LoadResult(error: '加载失败: $e');
     }
   }

@@ -30,11 +30,18 @@ class SerenityAudioHandler extends BaseAudioHandler with SeekHandler {
     try {
       if (!_players.containsKey(id)) {
         final player = AudioPlayer();
-        // 捕获加载错误（例如文件为空或不存在）
-        await player.setAsset(assetPath).catchError((e) {
-          print("Error loading asset $assetPath: $e");
-          return null;
-        });
+        // 判断是否为本地文件路径（以 / 开头）
+        try {
+          if (assetPath.startsWith('/')) {
+            await player.setFilePath(assetPath);
+          } else {
+            await player.setAsset(assetPath);
+          }
+        } catch (e) {
+          print("Error loading audio source $assetPath: $e");
+          return;
+        }
+
         await player.setLoopMode(LoopMode.one);
         await player.setVolume(volume);
         _players[id] = player;

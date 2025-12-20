@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/sound_provider.dart';
+import '../widgets/svg_icon.dart';
 
 class MixerPanel extends ConsumerWidget {
   const MixerPanel({super.key});
@@ -45,8 +45,8 @@ class MixerPanel extends ConsumerWidget {
                           border: Border.all(color: isActive ? Colors.white38 : Colors.white10, width: 1),
                         ),
                         child: Center(
-                          child: SvgPicture.asset(
-                            sound.svgPath,
+                          child: SvgIcon(
+                            path: sound.svgPath,
                             width: 18,
                             height: 18,
                             colorFilter: ColorFilter.mode(isActive ? Colors.white : Colors.white30, BlendMode.srcIn),

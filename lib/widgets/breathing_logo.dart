@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'svg_icon.dart';
 
 class BreathingLogo extends StatefulWidget {
   final String svgPath;
@@ -116,8 +116,8 @@ class _BreathingLogoState extends State<BreathingLogo> with SingleTickerProvider
                   width: widget.isActive ? 1.5 : 0.8,
                 ),
               ),
-              child: SvgPicture.asset(
-                widget.svgPath,
+              child: SvgIcon(
+                path: widget.svgPath,
                 colorFilter: ColorFilter.mode(
                   widget.isActive 
                       ? Colors.white.withOpacity(0.95) 
