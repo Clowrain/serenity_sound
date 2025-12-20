@@ -201,8 +201,11 @@ final sceneProvider = StateNotifierProvider<SceneNotifier, List<SoundScene>>((re
   return SceneNotifier(ref.watch(storageServiceProvider), ref);
 });
 
-// 当前激活的场景 ID
-final activeSceneProvider = StateProvider<String?>((ref) => null);
+// 当前激活的场景 ID (默认选中第一个场景)
+final activeSceneProvider = StateProvider<String?>((ref) {
+  final scenes = ref.watch(sceneProvider);
+  return scenes.isNotEmpty ? scenes.first.id : null;
+});
 
 // --- 定时器与其他 ---
 final isGlobalPlayingProvider = StreamProvider<bool>((ref) {
