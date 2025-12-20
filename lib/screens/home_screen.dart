@@ -405,6 +405,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) => const MixerPanel(),
     ).then((_) {
       ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+      
+      // 自动保存当前排序到选中的场景
+      final activeSceneId = ref.read(activeSceneProvider);
+      if (activeSceneId != null) {
+        ref.read(sceneProvider.notifier).updateSceneOrder(activeSceneId);
+      }
+      // 否则排序已自动保存到 soundListProvider (持久化存储)
     });
   }
 }

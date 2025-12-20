@@ -227,6 +227,24 @@ class SceneNotifier extends StateNotifier<List<SoundScene>> {
     _storage.saveScenes(state);
   }
 
+  // 只更新场景的排序（不改变激活的音效配置）
+  void updateSceneOrder(String id) {
+    final allSounds = _ref.read(soundListProvider);
+    final soundOrder = allSounds.map((s) => s.id).toList();
+    
+    state = [
+      for (final s in state)
+        if (s.id == id) SoundScene(
+          id: s.id,
+          name: s.name,
+          soundConfig: s.soundConfig,
+          soundOrder: soundOrder,
+          color: s.color,
+        ) else s
+    ];
+    _storage.saveScenes(state);
+  }
+
   void deleteScene(String id) {
     state = state.where((s) => s.id != id).toList();
     _storage.saveScenes(state);
