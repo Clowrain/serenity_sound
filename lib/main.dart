@@ -1,15 +1,17 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'models/sound_effect.dart';
 import 'providers/sound_provider.dart';
 import 'services/audio_handler.dart';
 import 'services/storage_service.dart';
+import 'screens/mixer_panel.dart';
+import 'screens/timer_panel.dart';
 import 'widgets/breathing_logo.dart';
+import 'widgets/control_buttons.dart';
+import 'widgets/scene_widgets.dart';
 
 late SerenityAudioHandler _handler;
 
@@ -94,7 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final sounds = ref.watch(soundListProvider);
     final activeIds = ref.watch(activeSoundsProvider);
-    final scenes = ref.watch(sceneProvider); // 监听场景
+    final scenes = ref.watch(sceneProvider);
     final isGlobalPlaying = ref.watch(isGlobalPlayingProvider).value ?? false;
     final timerState = ref.watch(timerProvider);
     final top12 = sounds.take(12).toList();
@@ -114,7 +116,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // 场景选择器 (支持拖拽排序、双击编辑、颜色显示)
+              // 场景选择器
               const SizedBox(height: 20),
               SizedBox(
                 height: 40,
@@ -128,9 +130,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   itemCount: scenes.length + 1,
                   itemBuilder: (context, index) {
                     if (index == scenes.length) {
-                      return KeyedSubtree(
-                        key: const ValueKey('add_button'),
-                        child: _AddSceneButton(),
+                      return const KeyedSubtree(
+                        key: ValueKey('add_button'),
+                        child: AddSceneButton(),
                       );
                     }
                     final scene = scenes[index];
@@ -183,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // 1. 顶部：复古数字显示屏
               Expanded(
-                flex: 3, // 稍微增加一点占比
+                flex: 3,
                 child: GestureDetector(
                   onDoubleTap: () => isGlobalPlaying ? _handler.pause() : _handler.play(),
                   child: Center(
@@ -197,7 +199,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Stack(
                               alignment: Alignment.center,
                               children: [
-                                _EndingFlicker(
+                                EndingFlicker(
                                   isEnding: timerState.isEnding,
                                   child: Text(
                                     (timerState.isRunning || timerState.isEnding) ? timerState.formattedTime : _timeString,
@@ -212,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ),
                                 ),
-                                _EndingFlicker(
+                                EndingFlicker(
                                   isEnding: timerState.isEnding,
                                   child: Text(
                                     (timerState.isRunning || timerState.isEnding) ? timerState.formattedTime : _timeString,
@@ -303,15 +305,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _ControlKnob(
+                    ControlKnob(
                       icon: Icons.grid_view_rounded,
                       onPressed: () => _showMixerPanel(context),
                     ),
-                    _MasterButton(
+                    MasterButton(
                       isPlaying: isGlobalPlaying,
                       onPressed: () => isGlobalPlaying ? _handler.pause() : _handler.play(),
                     ),
-                    _ControlKnob(
+                    ControlKnob(
                       icon: Icons.hourglass_empty_rounded,
                       onPressed: () => _showTimerPanel(context),
                     ),
@@ -403,380 +405,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       builder: (context) => const MixerPanel(),
     ).then((_) {
-      // 面板关闭时，清理掉非前 12 的音效
       ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
     });
-  }
-}
-
-class _ControlKnob extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const _ControlKnob({required this.icon, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, size: 24, color: Colors.white60),
-      onPressed: onPressed,
-      style: IconButton.styleFrom(
-        padding: const EdgeInsets.all(16),
-        side: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
-        backgroundColor: Colors.white.withOpacity(0.05),
-      ),
-    );
-  }
-}
-
-class _MasterButton extends StatelessWidget {
-  final bool isPlaying;
-  final VoidCallback onPressed;
-
-  const _MasterButton({required this.isPlaying, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        width: 85,
-        height: 85,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isPlaying ? Colors.white : Colors.white24,
-            width: 2,
-          ),
-          boxShadow: isPlaying ? [
-            BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 30, spreadRadius: 5)
-          ] : [],
-        ),
-        child: Center(
-          child: Icon(
-            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-            size: 45,
-            color: isPlaying ? Colors.white : Colors.white60,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class MixerPanel extends ConsumerWidget {
-  const MixerPanel({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sounds = ref.watch(soundListProvider);
-    final activeIds = ref.watch(activeSoundsProvider);
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-      child: Column(
-        children: [
-          Container(width: 50, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 40),
-          const Text('ANALOG MIXER', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 6, color: Colors.white70)),
-          const SizedBox(height: 40),
-          Expanded(
-            child: ReorderableListView.builder(
-              itemCount: sounds.length,
-              buildDefaultDragHandles: false, // 关键：禁用默认长按手柄
-              onReorder: (oldIndex, newIndex) {
-                ref.read(soundListProvider.notifier).reorder(oldIndex, newIndex);
-              },
-              itemBuilder: (context, index) {
-                final sound = sounds[index];
-                final isActive = activeIds.contains(sound.id);
-
-                return Column(
-                  key: ValueKey(sound.id),
-                  children: [
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                      leading: Container(
-                        width: 45,
-                        height: 45,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.02),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isActive ? Colors.white38 : Colors.white10, width: 1),
-                        ),
-                        child: Center(
-                          child: SvgPicture.asset(
-                            sound.svgPath,
-                            width: 18,
-                            height: 18,
-                            colorFilter: ColorFilter.mode(isActive ? Colors.white : Colors.white30, BlendMode.srcIn),
-                          ),
-                        ),
-                      ),
-                      title: Text(sound.name, style: const TextStyle(color: Colors.white, fontSize: 16, letterSpacing: 1)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 1. 播放/暂停按钮
-                          IconButton(
-                            icon: Icon(
-                              isActive ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                              color: isActive 
-                                  ? Color(int.parse(sound.themeColor.replaceAll('#', '0xFF'))) 
-                                  : Colors.white24,
-                              size: 28,
-                            ),
-                            onPressed: () => ref.read(activeSoundsProvider.notifier).toggle(sound),
-                          ),
-                          const SizedBox(width: 8),
-                          // 2. 专用的拖拽手柄
-                          ReorderableDragStartListener(
-                            index: index,
-                            child: const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Icon(Icons.reorder_rounded, color: Colors.white10, size: 20),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isActive)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 60, right: 16, bottom: 12),
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 2,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                            activeTrackColor: Color(int.parse(sound.themeColor.replaceAll('#', '0xFF'))).withOpacity(0.5),
-                            thumbColor: Colors.white,
-                          ),
-                          child: Slider(
-                            value: sound.volume,
-                            onChanged: (val) {
-                              ref.read(soundListProvider.notifier).updateVolume(sound.id, val);
-                              ref.read(activeSoundsProvider.notifier).updateVolume(sound.id, val);
-                            },
-                          ),
-                        ),
-                      ),
-                    const Divider(color: Colors.white10, height: 1),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class TimerPanel extends ConsumerStatefulWidget {
-  const TimerPanel({super.key});
-
-  @override
-  ConsumerState<TimerPanel> createState() => _TimerPanelState();
-}
-
-class _TimerPanelState extends ConsumerState<TimerPanel> {
-  double _currentValue = 30;
-
-  @override
-  Widget build(BuildContext context) {
-    final timerState = ref.watch(timerProvider);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min, // 自适应高度
-            children: [
-              Container(width: 50, height: 4, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 30),
-              const Text('SLEEP TIMER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 6, color: Colors.white30)),
-              const SizedBox(height: 30),
-              if (timerState.isRunning)
-                Column(
-                  children: [
-                    Text(timerState.formattedTime, style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w200, color: Colors.white, letterSpacing: 2)),
-                    const SizedBox(height: 30),
-                    TextButton(
-                      onPressed: () => ref.read(timerProvider.notifier).cancel(),
-                      child: const Text('CANCEL TIMER', style: TextStyle(color: Colors.redAccent, letterSpacing: 2, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    Text('${_currentValue.toInt()} MINUTES', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w200, color: Colors.white)),
-                    const SizedBox(height: 20),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 4,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-                        activeTrackColor: Colors.white24,
-                        inactiveTrackColor: Colors.white10,
-                        thumbColor: Colors.white,
-                      ),
-                      child: Slider(
-                        value: _currentValue,
-                        min: 1,
-                        max: 240,
-                        onChanged: (val) => setState(() => _currentValue = val),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    _MasterButton(
-                      isPlaying: false,
-                      onPressed: () {
-                        ref.read(timerProvider.notifier).setTimer(_currentValue.toInt());
-                        Navigator.pop(context);
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EndingFlicker extends StatefulWidget {
-  final Widget child;
-  final bool isEnding;
-  const _EndingFlicker({required this.child, required this.isEnding});
-  @override
-  State<_EndingFlicker> createState() => _EndingFlickerState();
-}
-
-class _EndingFlickerState extends State<_EndingFlicker> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    if (widget.isEnding) _controller.repeat(reverse: true);
-  }
-  @override
-  void didUpdateWidget(_EndingFlicker oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isEnding) { _controller.repeat(reverse: true); } else { _controller.stop(); }
-  }
-  @override
-  void dispose() { _controller.dispose(); super.dispose(); }
-  @override
-  Widget build(BuildContext context) {
-    if (!widget.isEnding) return widget.child;
-    return FadeTransition(opacity: Tween<double>(begin: 0.3, end: 1.0).animate(_controller), child: widget.child);
-  }
-}
-
-class _AddSceneButton extends ConsumerStatefulWidget {
-  @override
-  ConsumerState<_AddSceneButton> createState() => _AddSceneButtonState();
-}
-
-class _AddSceneButtonState extends ConsumerState<_AddSceneButton> {
-  static const List<String> _presetColors = [
-    '#38f9d7', // 青色
-    '#4FACFE', // 蓝色
-    '#43e97b', // 绿色
-    '#fee140', // 黄色
-    '#cd9cf2', // 紫色
-    '#fa709a', // 粉色
-    '#E2B0FF', // 淡紫
-    '#ff6b6b', // 红色
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        final result = await _showSaveDialog(context);
-        if (result != null && result['name'].isNotEmpty) {
-          ref.read(sceneProvider.notifier).addCurrentAsScene(
-            result['name'],
-            color: result['color'],
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: const Icon(Icons.add_circle_outline_rounded, color: Colors.white10, size: 20),
-      ),
-    );
-  }
-
-  Future<Map<String, dynamic>?> _showSaveDialog(BuildContext context) {
-    String name = "";
-    String selectedColor = _presetColors[0];
-
-    return showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF161616),
-          title: const Text('保存场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: '输入场景名称',
-                  hintStyle: TextStyle(color: Colors.white24),
-                ),
-                onChanged: (val) => name = val,
-              ),
-              const SizedBox(height: 20),
-              const Text('选择颜色', style: TextStyle(color: Colors.white38, fontSize: 12)),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: _presetColors.map((color) {
-                  final isSelected = color == selectedColor;
-                  final colorValue = Color(int.parse(color.replaceAll('#', '0xFF')));
-                  return GestureDetector(
-                    onTap: () => setState(() => selectedColor = color),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: colorValue,
-                        shape: BoxShape.circle,
-                        border: isSelected 
-                            ? Border.all(color: Colors.white, width: 2)
-                            : null,
-                        boxShadow: [BoxShadow(color: colorValue.withOpacity(0.4), blurRadius: 6)],
-                      ),
-                      child: isSelected 
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
-                          : null,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-            TextButton(
-              onPressed: () => Navigator.pop(context, {'name': name, 'color': selectedColor}),
-              child: const Text('保存'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
