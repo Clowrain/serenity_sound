@@ -56,6 +56,24 @@ class SoundListNotifier extends StateNotifier<List<SoundEffect>> {
     ];
     _storage.saveSounds(state);
   }
+
+  /// 添加远程音效
+  void addRemoteSounds(List<SoundEffect> sounds) {
+    state = [...state, ...sounds];
+    _storage.saveSounds(state);
+  }
+
+  /// 移除远程音效（按 ID 列表）
+  void removeRemoteSounds(List<String> ids) {
+    final idsSet = ids.toSet();
+    state = state.where((s) => !idsSet.contains(s.id)).toList();
+    _storage.saveSounds(state);
+  }
+
+  /// 获取所有远程音效
+  List<SoundEffect> getRemoteSounds() {
+    return state.where((s) => s.isRemote).toList();
+  }
 }
 
 final soundListProvider = StateNotifierProvider<SoundListNotifier, List<SoundEffect>>((ref) {

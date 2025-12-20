@@ -18,7 +18,13 @@ class SoundEffect extends HiveObject {
   final String themeColor;
 
   @HiveField(5)
-  final double volume; // 新增音量字段
+  final double volume;
+
+  @HiveField(6)
+  final bool isRemote; // 是否为远程音效
+
+  @HiveField(7)
+  final String? sourceId; // 关联的远程来源 ID
 
   SoundEffect({
     required this.id,
@@ -26,10 +32,16 @@ class SoundEffect extends HiveObject {
     required this.svgPath,
     required this.audioPath,
     required this.themeColor,
-    this.volume = 0.5, // 默认音量 50%
+    this.volume = 0.5,
+    this.isRemote = false,
+    this.sourceId,
   });
 
-  SoundEffect copyWith({double? volume}) {
+  SoundEffect copyWith({
+    double? volume,
+    bool? isRemote,
+    String? sourceId,
+  }) {
     return SoundEffect(
       id: id,
       name: name,
@@ -37,6 +49,8 @@ class SoundEffect extends HiveObject {
       audioPath: audioPath,
       themeColor: themeColor,
       volume: volume ?? this.volume,
+      isRemote: isRemote ?? this.isRemote,
+      sourceId: sourceId ?? this.sourceId,
     );
   }
 
@@ -48,6 +62,8 @@ class SoundEffect extends HiveObject {
       audioPath: json['audioPath'],
       themeColor: json['themeColor'],
       volume: json['volume']?.toDouble() ?? 0.5,
+      isRemote: json['isRemote'] ?? false,
+      sourceId: json['sourceId'],
     );
   }
 
@@ -59,6 +75,47 @@ class SoundEffect extends HiveObject {
       'audioPath': audioPath,
       'themeColor': themeColor,
       'volume': volume,
+      'isRemote': isRemote,
+      'sourceId': sourceId,
+    };
+  }
+}
+
+/// 远程音效来源
+class RemoteSource {
+  final String id;
+  final String url;
+  final String name;
+  final List<String> soundIds; // 该来源包含的音效 ID
+  final DateTime addedAt;
+
+  RemoteSource({
+    required this.id,
+    required this.url,
+    required this.name,
+    required this.soundIds,
+    required this.addedAt,
+  });
+
+  factory RemoteSource.fromJson(Map<String, dynamic> json) {
+    return RemoteSource(
+      id: json['id'],
+      url: json['url'],
+      name: json['name'] ?? '未命名',
+      soundIds: List<String>.from(json['soundIds'] ?? []),
+      addedAt: json['addedAt'] != null 
+          ? DateTime.parse(json['addedAt']) 
+          : DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'url': url,
+      'name': name,
+      'soundIds': soundIds,
+      'addedAt': addedAt.toIso8601String(),
     };
   }
 }

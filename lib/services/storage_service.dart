@@ -89,4 +89,19 @@ class StorageService {
     final List<Map<String, dynamic>> data = scenes.map((e) => e.toJson()).toList();
     await box.put(_keyScenes, data);
   }
+
+  // --- 远程来源存储 ---
+  static const String _keyRemoteSources = 'remote_sources';
+
+  List<RemoteSource> getRemoteSources() {
+    final box = Hive.box(_boxName);
+    final List<dynamic> data = box.get(_keyRemoteSources, defaultValue: []);
+    return data.map((e) => RemoteSource.fromJson(Map<String, dynamic>.from(e))).toList();
+  }
+
+  Future<void> saveRemoteSources(List<RemoteSource> sources) async {
+    final box = Hive.box(_boxName);
+    final List<Map<String, dynamic>> data = sources.map((e) => e.toJson()).toList();
+    await box.put(_keyRemoteSources, data);
+  }
 }

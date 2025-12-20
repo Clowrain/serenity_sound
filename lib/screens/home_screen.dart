@@ -10,6 +10,7 @@ import '../widgets/control_buttons.dart';
 import '../widgets/scene_widgets.dart';
 import 'mixer_panel.dart';
 import 'timer_panel.dart';
+import 'settings_panel.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -289,21 +290,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // 3. 底部：控制仪表盘
               Padding(
-                padding: const EdgeInsets.only(bottom: 50, left: 50, right: 50),
+                padding: const EdgeInsets.only(bottom: 50, left: 30, right: 30),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ControlKnob(
                       icon: Icons.grid_view_rounded,
                       onPressed: () => _showMixerPanel(context),
+                    ),
+                    ControlKnob(
+                      icon: Icons.hourglass_empty_rounded,
+                      onPressed: () => _showTimerPanel(context),
                     ),
                     MasterButton(
                       isPlaying: isGlobalPlaying,
                       onPressed: () => isGlobalPlaying ? handler.pause() : handler.play(),
                     ),
                     ControlKnob(
-                      icon: Icons.hourglass_empty_rounded,
-                      onPressed: () => _showTimerPanel(context),
+                      icon: Icons.settings_outlined,
+                      onPressed: () => _showSettingsPanel(context),
                     ),
                   ],
                 ),
@@ -424,5 +429,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       // 否则排序已自动保存到 soundListProvider (持久化存储)
     });
+  }
+
+  void _showSettingsPanel(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF121212),
+      isScrollControlled: true,
+      barrierColor: Colors.black.withOpacity(0.97),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+      ),
+      builder: (context) => const SettingsPanel(),
+    );
   }
 }

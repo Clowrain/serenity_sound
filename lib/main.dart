@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/sound_provider.dart';
 import 'services/audio_handler.dart';
 import 'services/storage_service.dart';
+import 'services/asset_cache_service.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
@@ -12,6 +13,9 @@ Future<void> main() async {
 
   final storageService = StorageService();
   await storageService.init();
+
+  final assetCacheService = AssetCacheService();
+  await assetCacheService.init();
 
   final handler = await AudioService.init(
     builder: () => SerenityAudioHandler(),
@@ -27,6 +31,7 @@ Future<void> main() async {
       overrides: [
         storageServiceProvider.overrideWithValue(storageService),
         audioHandlerProvider.overrideWithValue(handler),
+        assetCacheServiceProvider.overrideWithValue(assetCacheService),
       ],
       child: const SerenityApp(),
     ),
