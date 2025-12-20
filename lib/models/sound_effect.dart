@@ -67,18 +67,30 @@ class SoundScene {
   final String id;
   final String name;
   final Map<String, double> soundConfig; // SoundID -> Volume
+  final String color; // 场景主题色 (hex)
 
   SoundScene({
     required this.id,
     required this.name,
     required this.soundConfig,
+    this.color = '#38f9d7',
   });
+
+  SoundScene copyWith({String? name, String? color}) {
+    return SoundScene(
+      id: id,
+      name: name ?? this.name,
+      soundConfig: soundConfig,
+      color: color ?? this.color,
+    );
+  }
 
   factory SoundScene.fromJson(Map<String, dynamic> json) {
     return SoundScene(
       id: json['id'],
       name: json['name'],
       soundConfig: Map<String, double>.from(json['soundConfig']),
+      color: json['color'] ?? '#38f9d7',
     );
   }
 
@@ -87,6 +99,7 @@ class SoundScene {
       'id': id,
       'name': name,
       'soundConfig': soundConfig,
+      'color': color,
     };
   }
 }

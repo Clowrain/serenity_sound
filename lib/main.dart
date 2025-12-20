@@ -114,37 +114,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // 场景选择器 (新增)
+              // 场景选择器 (支持拖拽排序、双击编辑、颜色显示)
               const SizedBox(height: 20),
               SizedBox(
                 height: 40,
-                child: ListView.builder(
+                child: ReorderableListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 30),
+                  buildDefaultDragHandles: false,
+                  onReorder: (oldIndex, newIndex) {
+                    ref.read(sceneProvider.notifier).reorderScenes(oldIndex, newIndex);
+                  },
                   itemCount: scenes.length + 1,
                   itemBuilder: (context, index) {
                     if (index == scenes.length) {
-                      return _AddSceneButton();
+                      return KeyedSubtree(
+                        key: const ValueKey('add_button'),
+                        child: _AddSceneButton(),
+                      );
                     }
                     final scene = scenes[index];
-                    return GestureDetector(
-                      onTap: () {
-                        ref.read(activeSoundsProvider.notifier).applyScene(scene.soundConfig, sounds);
-                        // 首页应用场景后，立即清理非前 12 音效
-                        ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
-                      },
-                      onLongPress: () => _confirmDeleteScene(context, ref, scene), // 新增长按监听
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.03),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white10, width: 0.5),
-                        ),
-                        child: Text(
-                          scene.name.toUpperCase(),
-                          style: const TextStyle(fontSize: 10, letterSpacing: 2, color: Colors.white38),
+                    final sceneColor = Color(int.parse(scene.color.replaceAll('#', '0xFF')));
+                    return KeyedSubtree(
+                      key: ValueKey(scene.id),
+                      child: ReorderableDragStartListener(
+                        index: index,
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(activeSoundsProvider.notifier).applyScene(scene.soundConfig, sounds);
+                            ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+                          },
+                          onDoubleTap: () => _showRenameDialog(context, ref, scene),
+                          onLongPress: () => _confirmDeleteScene(context, ref, scene),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.03),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white10, width: 0.5),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: sceneColor,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [BoxShadow(color: sceneColor.withOpacity(0.5), blurRadius: 4)],
+                                  ),
+                                ),
+                                Text(
+                                  scene.name.toUpperCase(),
+                                  style: const TextStyle(fontSize: 10, letterSpacing: 2, color: Colors.white38),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     );
@@ -324,6 +353,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Navigator.pop(context);
             },
             child: const Text('删除', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRenameDialog(BuildContext context, WidgetRef ref, SoundScene scene) {
+    final controller = TextEditingController(text: scene.name);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF161616),
+        title: const Text('编辑场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: '输入场景名称',
+            hintStyle: TextStyle(color: Colors.white24),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          TextButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                ref.read(sceneProvider.notifier).renameScene(scene.id, newName);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('保存'),
           ),
         ],
       ),
@@ -616,14 +678,33 @@ class _EndingFlickerState extends State<_EndingFlicker> with SingleTickerProvide
   }
 }
 
-class _AddSceneButton extends ConsumerWidget {
+class _AddSceneButton extends ConsumerStatefulWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AddSceneButton> createState() => _AddSceneButtonState();
+}
+
+class _AddSceneButtonState extends ConsumerState<_AddSceneButton> {
+  static const List<String> _presetColors = [
+    '#38f9d7', // 青色
+    '#4FACFE', // 蓝色
+    '#43e97b', // 绿色
+    '#fee140', // 黄色
+    '#cd9cf2', // 紫色
+    '#fa709a', // 粉色
+    '#E2B0FF', // 淡紫
+    '#ff6b6b', // 红色
+  ];
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final name = await _showNameDialog(context);
-        if (name != null && name.isNotEmpty) {
-          ref.read(sceneProvider.notifier).addCurrentAsScene(name);
+        final result = await _showSaveDialog(context);
+        if (result != null && result['name'].isNotEmpty) {
+          ref.read(sceneProvider.notifier).addCurrentAsScene(
+            result['name'],
+            color: result['color'],
+          );
         }
       },
       child: Container(
@@ -633,23 +714,68 @@ class _AddSceneButton extends ConsumerWidget {
     );
   }
 
-  Future<String?> _showNameDialog(BuildContext context) {
+  Future<Map<String, dynamic>?> _showSaveDialog(BuildContext context) {
     String name = "";
-    return showDialog<String>(
+    String selectedColor = _presetColors[0];
+
+    return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161616),
-        title: const Text('保存场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
-        content: TextField(
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(hintText: '输入场景名称', hintStyle: TextStyle(color: Colors.white24)),
-          onChanged: (val) => name = val,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: const Color(0xFF161616),
+          title: const Text('保存场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: '输入场景名称',
+                  hintStyle: TextStyle(color: Colors.white24),
+                ),
+                onChanged: (val) => name = val,
+              ),
+              const SizedBox(height: 20),
+              const Text('选择颜色', style: TextStyle(color: Colors.white38, fontSize: 12)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: _presetColors.map((color) {
+                  final isSelected = color == selectedColor;
+                  final colorValue = Color(int.parse(color.replaceAll('#', '0xFF')));
+                  return GestureDetector(
+                    onTap: () => setState(() => selectedColor = color),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: colorValue,
+                        shape: BoxShape.circle,
+                        border: isSelected 
+                            ? Border.all(color: Colors.white, width: 2)
+                            : null,
+                        boxShadow: [BoxShadow(color: colorValue.withOpacity(0.4), blurRadius: 6)],
+                      ),
+                      child: isSelected 
+                          ? const Icon(Icons.check, color: Colors.white, size: 16)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, {'name': name, 'color': selectedColor}),
+              child: const Text('保存'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-          TextButton(onPressed: () => Navigator.pop(context, name), child: const Text('保存')),
-        ],
       ),
     );
   }

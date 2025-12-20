@@ -117,7 +117,7 @@ class SceneNotifier extends StateNotifier<List<SoundScene>> {
     state = _storage.getScenes();
   }
 
-  void addCurrentAsScene(String name) {
+  void addCurrentAsScene(String name, {String color = '#38f9d7'}) {
     final activeIds = _ref.read(activeSoundsProvider);
     final allSounds = _ref.read(soundListProvider);
     
@@ -131,9 +131,27 @@ class SceneNotifier extends StateNotifier<List<SoundScene>> {
       id: const Uuid().v4(),
       name: name,
       soundConfig: config,
+      color: color,
     );
 
     state = [...state, newScene];
+    _storage.saveScenes(state);
+  }
+
+  void renameScene(String id, String newName) {
+    state = [
+      for (final s in state)
+        if (s.id == id) s.copyWith(name: newName) else s
+    ];
+    _storage.saveScenes(state);
+  }
+
+  void reorderScenes(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) newIndex -= 1;
+    final newList = [...state];
+    final item = newList.removeAt(oldIndex);
+    newList.insert(newIndex, item);
+    state = newList;
     _storage.saveScenes(state);
   }
 
