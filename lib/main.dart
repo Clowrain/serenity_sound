@@ -137,24 +137,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
                     final scene = scenes[index];
                     final sceneColor = Color(int.parse(scene.color.replaceAll('#', '0xFF')));
+                    final activeSceneId = ref.watch(activeSceneProvider);
+                    final isSelected = activeSceneId == scene.id;
                     return KeyedSubtree(
                       key: ValueKey(scene.id),
                       child: ReorderableDragStartListener(
                         index: index,
                         child: GestureDetector(
                           onTap: () {
+                            ref.read(activeSceneProvider.notifier).state = scene.id;
                             ref.read(activeSoundsProvider.notifier).applyScene(scene);
                             ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
                           },
                           onDoubleTap: () => _showRenameDialog(context, ref, scene),
                           onLongPress: () => _confirmDeleteScene(context, ref, scene),
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
                             margin: const EdgeInsets.only(right: 12),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
+                              color: isSelected 
+                                  ? sceneColor.withOpacity(0.15) 
+                                  : Colors.white.withOpacity(0.03),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white10, width: 0.5),
+                              border: Border.all(
+                                color: isSelected ? sceneColor : Colors.white10, 
+                                width: isSelected ? 1.5 : 0.5,
+                              ),
+                              boxShadow: isSelected ? [
+                                BoxShadow(color: sceneColor.withOpacity(0.3), blurRadius: 8),
+                              ] : [],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -171,7 +183,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 Text(
                                   scene.name.toUpperCase(),
-                                  style: const TextStyle(fontSize: 10, letterSpacing: 2, color: Colors.white38),
+                                  style: TextStyle(
+                                    fontSize: 10, 
+                                    letterSpacing: 2, 
+                                    color: isSelected ? Colors.white70 : Colors.white38,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  ),
                                 ),
                               ],
                             ),
