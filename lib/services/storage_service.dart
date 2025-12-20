@@ -54,9 +54,18 @@ class StorageService {
     if (box.get(_keyScenes) == null) {
       final defaultScenes = [
         {
+          'id': 'scene_default',
+          'name': '默认',
+          'soundConfig': <String, double>{},
+          'soundOrder': <String>[],
+          'color': '#FFFFFF'
+        },
+        {
           'id': 'scene_nature',
           'name': '大自然',
-          'soundConfig': {'nature_campfire': 0.6, 'nature_river': 0.4}
+          'soundConfig': {'nature_campfire': 0.6, 'nature_river': 0.4},
+          'soundOrder': <String>[],
+          'color': '#38f9d7'
         }
       ];
       await box.put(_keyScenes, defaultScenes);
