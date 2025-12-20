@@ -227,10 +227,21 @@ final sceneProvider = StateNotifierProvider<SceneNotifier, List<SoundScene>>((re
   return SceneNotifier(ref.watch(storageServiceProvider), ref);
 });
 
-// 当前激活的场景 ID (默认选中第一个场景)
-final activeSceneProvider = StateProvider<String?>((ref) {
-  final scenes = ref.watch(sceneProvider);
-  return scenes.isNotEmpty ? scenes.first.id : null;
+// 当前激活的场景 ID
+final activeSceneProvider = StateProvider<String?>((ref) => null);
+
+// 初始化默认选中场景的 Provider
+final initActiveSceneProvider = Provider<void>((ref) {
+  final activeScene = ref.read(activeSceneProvider);
+  if (activeScene == null) {
+    final scenes = ref.read(sceneProvider);
+    if (scenes.isNotEmpty) {
+      // 延迟设置，避免在 provider 初始化期间修改其他 provider
+      Future.microtask(() {
+        ref.read(activeSceneProvider.notifier).state = scenes.first.id;
+      });
+    }
+  }
 });
 
 // --- 定时器与其他 ---

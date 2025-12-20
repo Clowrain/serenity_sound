@@ -75,6 +75,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
+    // 初始化默认选中场景
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(initActiveSceneProvider);
+    });
   }
 
   @override
