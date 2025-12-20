@@ -1,0 +1,86 @@
+[
+  {
+    "id": "rain_heavy",
+    "name": "大雨滂沱",
+    "svgPath": "assets/svg/rain.svg",
+    "audioPath": "assets/audio/rain/heavy-rain.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "nature_waves",
+    "name": "澎湃海浪",
+    "svgPath": "assets/svg/ocean.svg",
+    "audioPath": "assets/audio/nature/waves.mp3",
+    "themeColor": "#00f2fe"
+  },
+  {
+    "id": "nature_wind",
+    "name": "山谷呼啸",
+    "svgPath": "assets/svg/wind.svg",
+    "audioPath": "assets/audio/nature/howling-wind.mp3",
+    "themeColor": "#A18CD1"
+  },
+  {
+    "id": "nature_campfire",
+    "name": "哔啪篝火",
+    "svgPath": "assets/svg/fire.svg",
+    "audioPath": "assets/audio/nature/campfire.mp3",
+    "themeColor": "#f093fb"
+  },
+  {
+    "id": "animals_birds",
+    "name": "晨曦鸟鸣",
+    "svgPath": "assets/svg/forest.svg",
+    "audioPath": "assets/audio/animals/birds.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "places_cafe",
+    "name": "午后咖啡",
+    "svgPath": "assets/svg/cafe.svg",
+    "audioPath": "assets/audio/places/cafe.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "transport_train",
+    "name": "铁轨漫游",
+    "svgPath": "assets/svg/train.svg",
+    "audioPath": "assets/audio/transport/inside-a-train.mp3",
+    "themeColor": "#cd9cf2"
+  },
+  {
+    "id": "things_keyboard",
+    "name": "机械键盘",
+    "svgPath": "assets/svg/meditation.svg",
+    "audioPath": "assets/audio/things/keyboard.mp3",
+    "themeColor": "#7028e4"
+  },
+  {
+    "id": "urban_busy_street",
+    "name": "繁华街头",
+    "svgPath": "assets/svg/cafe.svg",
+    "audioPath": "assets/audio/urban/busy-street.mp3",
+    "themeColor": "#E2B0FF"
+  },
+  {
+    "id": "nature_river",
+    "name": "林间小溪",
+    "svgPath": "assets/svg/ocean.svg",
+    "audioPath": "assets/audio/nature/river.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "things_clock",
+    "name": "时光滴答",
+    "svgPath": "assets/svg/meditation.svg",
+    "audioPath": "assets/audio/things/clock.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "nature_forest",
+    "name": "幽静林间",
+    "svgPath": "assets/svg/forest.svg",
+    "audioPath": "assets/audio/nature/wind-in-trees.mp3",
+    "themeColor": "#5ee7df"
+  }
+]
