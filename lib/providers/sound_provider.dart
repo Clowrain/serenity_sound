@@ -258,6 +258,9 @@ final sceneProvider = StateNotifierProvider<SceneNotifier, List<SoundScene>>((re
 // 当前激活的场景 ID
 final activeSceneProvider = StateProvider<String?>((ref) => null);
 
+// 未选中场景时的音效排序（用于恢复）
+final unselectedSoundOrderProvider = StateProvider<List<String>>((ref) => []);
+
 // 初始化默认选中场景的 Provider
 final initActiveSceneProvider = Provider<void>((ref) {
   final activeScene = ref.read(activeSceneProvider);

@@ -98,11 +98,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         index: index,
                         child: GestureDetector(
                           onTap: () {
+                            final currentActiveId = ref.read(activeSceneProvider);
+                            
                             if (isSelected) {
-                              // 取消选中：停止所有播放
+                              // 取消选中：恢复未选中时的排序并停止播放
                               ref.read(activeSceneProvider.notifier).state = null;
+                              final unselectedOrder = ref.read(unselectedSoundOrderProvider);
+                              if (unselectedOrder.isNotEmpty) {
+                                ref.read(soundListProvider.notifier).applyOrder(unselectedOrder);
+                              }
                               ref.read(activeSoundsProvider.notifier).stopAll();
                             } else {
+                              // 如果从未选中状态切换到选中，先保存当前排序
+                              if (currentActiveId == null) {
+                                final currentOrder = ref.read(soundListProvider).map((s) => s.id).toList();
+                                ref.read(unselectedSoundOrderProvider.notifier).state = currentOrder;
+                              }
                               // 选中：应用场景
                               ref.read(activeSceneProvider.notifier).state = scene.id;
                               ref.read(activeSoundsProvider.notifier).applyScene(scene);
