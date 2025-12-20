@@ -66,13 +66,15 @@ class SoundEffect extends HiveObject {
 class SoundScene {
   final String id;
   final String name;
-  final Map<String, double> soundConfig; // SoundID -> Volume
+  final Map<String, double> soundConfig; // 激活的 SoundID -> Volume
+  final List<String> soundOrder; // 所有音效的排序 (保存时的顺序)
   final String color; // 场景主题色 (hex)
 
   SoundScene({
     required this.id,
     required this.name,
     required this.soundConfig,
+    this.soundOrder = const [],
     this.color = '#38f9d7',
   });
 
@@ -81,6 +83,7 @@ class SoundScene {
       id: id,
       name: name ?? this.name,
       soundConfig: soundConfig,
+      soundOrder: soundOrder,
       color: color ?? this.color,
     );
   }
@@ -90,6 +93,9 @@ class SoundScene {
       id: json['id'],
       name: json['name'],
       soundConfig: Map<String, double>.from(json['soundConfig']),
+      soundOrder: json['soundOrder'] != null 
+          ? List<String>.from(json['soundOrder']) 
+          : [],
       color: json['color'] ?? '#38f9d7',
     );
   }
@@ -99,6 +105,7 @@ class SoundScene {
       'id': id,
       'name': name,
       'soundConfig': soundConfig,
+      'soundOrder': soundOrder,
       'color': color,
     };
   }

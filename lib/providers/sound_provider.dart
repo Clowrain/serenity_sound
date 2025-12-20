@@ -27,6 +27,28 @@ class SoundListNotifier extends StateNotifier<List<SoundEffect>> {
     _storage.saveSounds(newList);
   }
 
+  // 根据保存的顺序重新排列音效
+  void applyOrder(List<String> order) {
+    if (order.isEmpty) return;
+    
+    final Map<String, SoundEffect> soundMap = {for (final s in state) s.id: s};
+    final List<SoundEffect> newList = [];
+    
+    // 按保存的顺序添加
+    for (final id in order) {
+      if (soundMap.containsKey(id)) {
+        newList.add(soundMap[id]!);
+        soundMap.remove(id);
+      }
+    }
+    
+    // 添加可能新增的音效（不在保存顺序中的）
+    newList.addAll(soundMap.values);
+    
+    state = newList;
+    _storage.saveSounds(newList);
+  }
+
   void updateVolume(String id, double volume) {
     state = [
       for (final sound in state)
@@ -75,19 +97,30 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
     }
   }
 
-  // 应用一个场景配置
-  void applyScene(Map<String, double> config, List<SoundEffect> allSounds) {
+  // 应用一个场景配置 (包括音效排序和音量)
+  void applyScene(SoundScene scene) {
+    final allSounds = _ref.read(soundListProvider);
+    
     // 1. 停止当前所有播放
     for (final id in state) {
       _handler.stopTrack(id);
     }
     
-    // 2. 根据新配置开启
+    // 2. 恢复音效排序 (如果有保存的排序)
+    if (scene.soundOrder.isNotEmpty) {
+      _ref.read(soundListProvider.notifier).applyOrder(scene.soundOrder);
+    }
+    
+    // 3. 根据场景配置开启音效并设置音量
     final newActive = <String>{};
-    for (final entry in config.entries) {
-      final sound = allSounds.firstWhere((s) => s.id == entry.key);
-      _handler.playTrack(sound.id, sound.audioPath, entry.value);
-      newActive.add(sound.id);
+    for (final entry in scene.soundConfig.entries) {
+      final sound = allSounds.firstWhere((s) => s.id == entry.key, orElse: () => allSounds.first);
+      if (sound.id == entry.key) {
+        // 更新音量
+        _ref.read(soundListProvider.notifier).updateVolume(sound.id, entry.value);
+        _handler.playTrack(sound.id, sound.audioPath, entry.value);
+        newActive.add(sound.id);
+      }
     }
     
     state = newActive;
@@ -126,11 +159,14 @@ class SceneNotifier extends StateNotifier<List<SoundScene>> {
       final sound = allSounds.firstWhere((s) => s.id == id);
       config[id] = sound.volume;
     }
+    // 保存当前音效排序
+    final soundOrder = allSounds.map((s) => s.id).toList();
 
     final newScene = SoundScene(
       id: const Uuid().v4(),
       name: name,
       soundConfig: config,
+      soundOrder: soundOrder,
       color: color,
     );
 

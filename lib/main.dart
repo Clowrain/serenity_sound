@@ -143,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         index: index,
                         child: GestureDetector(
                           onTap: () {
-                            ref.read(activeSoundsProvider.notifier).applyScene(scene.soundConfig, sounds);
+                            ref.read(activeSoundsProvider.notifier).applyScene(scene);
                             ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
                           },
                           onDoubleTap: () => _showRenameDialog(context, ref, scene),
