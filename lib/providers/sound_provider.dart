@@ -97,6 +97,15 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
     }
   }
 
+  /// 停止所有音效播放
+  void stopAll() {
+    for (final id in state) {
+      _handler.stopTrack(id);
+    }
+    state = {};
+    _handler.pause();
+  }
+
   // 应用一个场景配置 (包括音效排序和音量)
   void applyScene(SoundScene scene) {
     final allSounds = _ref.read(soundListProvider);

@@ -52,14 +52,8 @@ class StorageService {
     }
 
     if (box.get(_keyScenes) == null) {
+      // 只保留示例场景，不再有"默认"场景
       final defaultScenes = [
-        {
-          'id': 'scene_default',
-          'name': '默认',
-          'soundConfig': <String, double>{},
-          'soundOrder': <String>[],
-          'color': '#FFFFFF'
-        },
         {
           'id': 'scene_nature',
           'name': '大自然',

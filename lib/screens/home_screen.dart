@@ -27,10 +27,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
-    // 初始化默认选中场景
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(initActiveSceneProvider);
-    });
   }
 
   @override
@@ -102,9 +98,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         index: index,
                         child: GestureDetector(
                           onTap: () {
-                            ref.read(activeSceneProvider.notifier).state = scene.id;
-                            ref.read(activeSoundsProvider.notifier).applyScene(scene);
-                            ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+                            if (isSelected) {
+                              // 取消选中：停止所有播放
+                              ref.read(activeSceneProvider.notifier).state = null;
+                              ref.read(activeSoundsProvider.notifier).stopAll();
+                            } else {
+                              // 选中：应用场景
+                              ref.read(activeSceneProvider.notifier).state = scene.id;
+                              ref.read(activeSoundsProvider.notifier).applyScene(scene);
+                              ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+                            }
                           },
                           onDoubleTap: () => _showRenameDialog(context, ref, scene),
                           onLongPress: () => _confirmDeleteScene(context, ref, scene),
