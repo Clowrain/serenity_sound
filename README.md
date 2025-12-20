@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.32.0-02569B?logo=flutter" alt="Flutter">
+  <img src="https://img.shields.io/badge/Flutter-3.32.8-02569B?logo=flutter" alt="Flutter">
   <img src="https://img.shields.io/badge/Dart-3.8.1-0175C2?logo=dart" alt="Dart">
   <img src="https://img.shields.io/badge/Platform-iOS%20%7C%20Android%20%7C%20macOS-lightgrey" alt="Platform">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
@@ -18,10 +18,21 @@
 |------|------|
 | 🎵 **80+ 高品质音效** | 自然、雨声、动物、场所、交通、器物、城市 7 大分类 |
 | 🎚️ **无限混音** | 同时播放多个音效，独立调节每个音轨音量 |
-| 💾 **场景保存** | 一键保存当前混音配置，随时切换 |
+| 💾 **场景管理** | 保存、编辑、删除、拖拽排序场景，自定义颜色 |
+| 🔄 **场景恢复** | 保存音效排序、音量配置，一键完整恢复 |
 | ⏰ **睡眠定时器** | 设置倒计时自动停止，安心入睡 |
 | 🔄 **后台播放** | 锁屏、切换应用时持续播放，通知栏控制 |
 | ✨ **呼吸动画** | 音效图标随播放状态动态呼吸发光 |
+
+---
+
+## 🎬 场景功能
+
+- **点击** 场景 → 应用场景（恢复音效、音量、排序）
+- **双击** 场景 → 编辑名称 / 覆盖保存当前配置
+- **长按** 场景 → 删除场景
+- **拖拽** 场景 → 调整顺序
+- **保存时可选择场景颜色**（8 种预设）
 
 ---
 
@@ -41,7 +52,7 @@
 
 ## 🛠️ 技术栈
 
-- **框架**: Flutter 3.32 + Material 3
+- **框架**: Flutter 3.32.8 + Material 3
 - **状态管理**: Riverpod
 - **音频**: just_audio + audio_service
 - **持久化**: Hive
@@ -53,21 +64,27 @@
 
 ```
 lib/
-├── main.dart              # 应用入口 & 主界面
+├── main.dart                   # 应用入口 (~50行)
 ├── models/
-│   └── sound_effect.dart  # 数据模型
+│   └── sound_effect.dart       # 数据模型 (SoundEffect, SoundScene)
 ├── providers/
-│   └── sound_provider.dart # 状态管理
+│   └── sound_provider.dart     # 状态管理 (Riverpod providers)
+├── screens/
+│   ├── home_screen.dart        # 首页界面
+│   ├── mixer_panel.dart        # 混音面板
+│   └── timer_panel.dart        # 定时器面板
 ├── services/
-│   ├── audio_handler.dart  # 后台音频服务
-│   └── storage_service.dart # 数据持久化
+│   ├── audio_handler.dart      # 后台音频服务
+│   └── storage_service.dart    # 数据持久化 (Hive)
 └── widgets/
-    └── breathing_logo.dart # 呼吸动画组件
+    ├── breathing_logo.dart     # 呼吸动画组件
+    ├── control_buttons.dart    # 控制按钮组件
+    └── scene_widgets.dart      # 场景相关组件
 
 assets/
-├── audio/                 # 80+ MP3 音效文件
-├── svg/                   # 矢量图标
-└── config/sounds.json     # 音效配置
+├── audio/                      # 80+ MP3 音效文件
+├── svg/                        # 矢量图标
+└── config/sounds.json          # 音效配置
 ```
 
 ---
@@ -81,9 +98,6 @@ cd serenity_sound
 
 # 安装依赖
 flutter pub get
-
-# 生成 Hive 适配器
-flutter pub run build_runner build
 
 # 运行
 flutter run
@@ -112,11 +126,11 @@ flutter run
 
 ## 📱 支持平台
 
-| 平台 | 状态 |
-|------|------|
-| Android | ✅ APK / AAB |
-| iOS | ✅ IPA |
-| macOS | ✅ DMG |
+| 平台 | 状态 | 构建产物 |
+|------|------|---------|
+| Android | ✅ | APK / AAB |
+| iOS | ✅ | IPA |
+| macOS | ✅ | DMG |
 
 ---
 
