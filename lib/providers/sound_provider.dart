@@ -108,8 +108,6 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
 
   // 应用一个场景配置 (包括音效排序和音量)
   void applyScene(SoundScene scene) {
-    final allSounds = _ref.read(soundListProvider);
-    
     // 1. 停止当前所有播放
     for (final id in state) {
       _handler.stopTrack(id);
@@ -120,7 +118,10 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
       _ref.read(soundListProvider.notifier).applyOrder(scene.soundOrder);
     }
     
-    // 3. 根据场景配置开启音效并设置音量
+    // 3. 重新读取音效列表（排序后）
+    final allSounds = _ref.read(soundListProvider);
+    
+    // 4. 根据场景配置开启音效并设置音量
     final newActive = <String>{};
     for (final entry in scene.soundConfig.entries) {
       final sound = allSounds.firstWhere((s) => s.id == entry.key, orElse: () => allSounds.first);
