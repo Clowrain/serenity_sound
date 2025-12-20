@@ -1,4 +1,6 @@
-name: Build and Release serenity_soundon:
+name: Build and Release serenity_sound
+
+on:
   push:
     branches:
       - main
@@ -32,19 +34,19 @@ jobs:
       - name: Build Android App Bundle
         run: flutter build appbundle --release
 
-      # ---- Rename outputs to sound_box.xxx ----
+      # ---- Rename outputs to serenity_sound.xxx ----
       - name: Rename Android outputs
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk sound_box.apk
-          mv build/app/outputs/bundle/release/app-release.aab sound_box.aab
+          mv build/app/outputs/flutter-apk/app-release.apk serenity_sound.apk
+          mv build/app/outputs/bundle/release/app-release.aab serenity_sound.aab
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
           path: |
-            sound_box.apk
-            sound_box.aab
+            serenity_sound.apk
+            serenity_sound.aab
 
   # ============================
   # 2. 构建并归档 iOS 和 macOS
@@ -66,24 +68,24 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      # -------- macOS: sound_box.dmg --------
+      # -------- macOS: serenity_sound.dmg --------
       - name: Build macOS app
         run: flutter build macos --release
 
-      - name: Create sound_box.dmg
+      - name: Create serenity_sound.dmg
         run: |
           cd build/macos/Build/Products/Release
           APP_BUNDLE=$(find . -name "*.app" | head -n 1)
           echo "Using macOS app: $APP_BUNDLE"
           # 使用 hdiutil 生成 DMG
-          hdiutil create -volname "sound_box" \
+          hdiutil create -volname "serenity_sound" \
             -srcfolder "$APP_BUNDLE" \
-            -ov -format UDZO "sound_box.dmg"
+            -ov -format UDZO "serenity_sound.dmg"
           # 移动到仓库根目录
-          mv sound_box.dmg ../../../../..
+          mv serenity_sound.dmg ../../../../..
           cd ../../../../..
 
-      # -------- iOS: sound_box.ipa --------
+      # -------- iOS: serenity_sound.ipa --------
       - name: Build iOS app (no codesign)
         run: |
           # 生成 iOS 应用，不进行签名
@@ -95,15 +97,15 @@ jobs:
           # 将 .app 文件压缩并生成 .ipa 文件
           mkdir -p Payload
           cp -R $APP_PATH Payload/
-          zip -r sound_box.ipa Payload
+          zip -r serenity_sound.ipa Payload
 
       - name: Upload macOS & iOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-ios-artifacts
           path: |
-            sound_box.dmg
-            sound_box.ipa
+            serenity_sound.dmg
+            serenity_sound.ipa
 
   # ============================
   # 3. 创建 GitHub Release 并上传产物
@@ -145,13 +147,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APP_VERSION }}
-          name: "sound_box ${{ env.APP_VERSION }}"
+          name: "serenity_sound ${{ env.APP_VERSION }}"
           draft: false
           prerelease: false
           files: |
-            dist/android-artifacts/sound_box.apk
-            dist/android-artifacts/sound_box.aab
-            dist/macos-ios-artifacts/sound_box.dmg
-            dist/macos-ios-artifacts/sound_box.ipa
+            dist/android-artifacts/serenity_sound.apk
+            dist/android-artifacts/serenity_sound.aab
+            dist/macos-ios-artifacts/serenity_sound.dmg
+            dist/macos-ios-artifacts/serenity_sound.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
