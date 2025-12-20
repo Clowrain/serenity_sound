@@ -1,89 +1,125 @@
-# Serenity Sound (宁静之声)
+<p align="center">
+  <h1 align="center">🌙 Serenity Sound</h1>
+  <p align="center">极简主义环境音效混音应用 · 专为放松、冥想与专注而设计</p>
+</p>
 
-Serenity Sound 是一款专为放松、冥想、睡眠和提高专注度设计的极简主义环境音效混音应用。它通过高品质的自然与生活音效，结合复古的视觉设计，为用户营造沉浸式的听觉环境。
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.32.0-02569B?logo=flutter" alt="Flutter">
+  <img src="https://img.shields.io/badge/Dart-3.8.1-0175C2?logo=dart" alt="Dart">
+  <img src="https://img.shields.io/badge/Platform-iOS%20%7C%20Android%20%7C%20macOS-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+</p>
 
-## ✨ 项目核心特性
+---
 
-- **庞大的音效库**：内置 80+ 种精选音效，涵盖：
-  - **自然 (Nature)**：篝火、溪流、海浪、森林风声等。
-  - **雨声 (Rain)**：暴雨、小雨、窗边雨、车顶雨、惊雷等。
-  - **动物 (Animals)**：鸟鸣、猫咪呼噜、鲸语、虫鸣等。
-  - **场所 (Places)**：咖啡厅、图书馆、夜间村庄、水下世界等。
-  - **交通 (Transport)**：列车车厢、潜艇、划船、飞机等。
-  - **器物 (Things)**：机械键盘、老式挂钟、风铃、颂钵等。
-  - **城市 (Urban)**：繁华街道、交通流、烟花、人群等。
-- **独特的展示逻辑 (Top-12 Logic)**：
-  - **首页精选**：首页仅展示排名前 12 位的音效，确保界面简洁且易于快速开启。
-  - **混音预览模式**：在混音面板中，用户可以预览播放库中所有的 80+ 种音效。
-  - **动态裁剪**：关闭混音面板时，非前 12 名的预览音效会自动停止，节省系统资源并维持首页的一致性。
-  - **自定义排序**：支持通过拖拽手柄重新排列音效顺序，从而自定义首页展示的 12 个音效。
-- **自定义场景 (Scenes)**：允许用户将当前的混音配置（包含哪些声音及各自的音量）保存为“场景”，以便一键切换。
-- **复古数字视觉**：
-  - 复古 VFD 风格的数字时钟与定时器显示。
-  - 动态“呼吸灯”音效图标，实时反馈播放状态与音效主题色。
-  - 沉浸式暗黑渐变背景。
-- **全方位功能支持**：
-  - **睡眠定时器**：设置倒计时自动停止播放。
-  - **后台播放**：支持系统级后台音频服务，锁屏或切换应用时持续播放，并可通过通知栏控制。
-  - **多语种支持**：界面及 80+ 种音效名称已完全汉化。
+## ✨ 特性亮点
 
-## 🛠️ 技术架构
+| 功能 | 描述 |
+|------|------|
+| 🎵 **80+ 高品质音效** | 自然、雨声、动物、场所、交通、器物、城市 7 大分类 |
+| 🎚️ **无限混音** | 同时播放多个音效，独立调节每个音轨音量 |
+| 💾 **场景保存** | 一键保存当前混音配置，随时切换 |
+| ⏰ **睡眠定时器** | 设置倒计时自动停止，安心入睡 |
+| 🔄 **后台播放** | 锁屏、切换应用时持续播放，通知栏控制 |
+| ✨ **呼吸动画** | 音效图标随播放状态动态呼吸发光 |
 
-- **UI 框架**: Flutter (支持 Material 3 设计规范)
-- **状态管理**: [Riverpod](https://riverpod.dev/) (用于复杂的混音状态管理与逻辑解耦)
-- **音频引擎**: 
-  - [just_audio](https://pub.dev/packages/just_audio): 负责多音轨并发播放、音量平滑调节。
-  - [audio_service](https://pub.dev/packages/audio_service): 负责 iOS/Android 系统的后台播放与媒体控制集成。
-- **数据持久化**: [Hive](https://pub.dev/packages/hive) (高性能键值对数据库，用于存储用户排序、场景及音量设置)
-- **图形与资源**:
-  - [flutter_svg](https://pub.dev/packages/flutter_svg): 渲染来自 Iconify 的 MDI 与 Phosphor 矢量图标。
-  - 自动同步逻辑：启动时自动比对 `sounds.json` 配置与本地数据库，确保资源动态更新。
+---
+
+## 📦 音效分类
+
+```
+🌿 自然 (12)    篝火 · 溪流 · 海浪 · 瀑布 · 风声 · 丛林...
+🌧️ 雨声 (8)     暴雨 · 小雨 · 窗边雨 · 车顶雨 · 惊雷...
+🐾 动物 (16)    鸟鸣 · 猫咪呼噜 · 鲸语 · 虫鸣 · 狼嚎...
+🏠 场所 (16)    咖啡厅 · 图书馆 · 寺庙 · 水下世界...
+🚂 交通 (6)     火车车厢 · 飞机 · 帆船 · 潜艇...
+⚙️ 器物 (16)    键盘 · 时钟 · 风铃 · 黑胶唱片...
+🌆 城市 (7)     繁华街道 · 烟花 · 交通流...
+```
+
+---
+
+## 🛠️ 技术栈
+
+- **框架**: Flutter 3.32 + Material 3
+- **状态管理**: Riverpod
+- **音频**: just_audio + audio_service
+- **持久化**: Hive
+- **图标**: flutter_svg (MDI / Phosphor)
+
+---
 
 ## 📂 项目结构
 
-```text
-lib/
-├── main.dart             # 应用入口、首页 UI 及混音面板/定时器弹窗
-├── models/
-│   └── sound_effect.dart # 数据模型 (SoundEffect, SoundScene)
-├── providers/
-│   └── sound_provider.dart # 核心逻辑：混音状态、前12名过滤、定时器
-├── services/
-│   ├── audio_handler.dart  # 系统音频服务封装 (后台控制)
-│   └── storage_service.dart # 数据同步与 Hive 持久化逻辑
-├── widgets/
-│   └── breathing_logo.dart # 动画组件：支持呼吸效果的 SVG 图标
-assets/
-├── audio/                # 80+ 个分类存放的 mp3 音频文件
-├── svg/                  # 统一样式的 Iconify 矢量图标资源
-└── config/
-    └── sounds.json       # 核心配置文件：定义 ID、中文名、图标路径与主题色
 ```
+lib/
+├── main.dart              # 应用入口 & 主界面
+├── models/
+│   └── sound_effect.dart  # 数据模型
+├── providers/
+│   └── sound_provider.dart # 状态管理
+├── services/
+│   ├── audio_handler.dart  # 后台音频服务
+│   └── storage_service.dart # 数据持久化
+└── widgets/
+    └── breathing_logo.dart # 呼吸动画组件
+
+assets/
+├── audio/                 # 80+ MP3 音效文件
+├── svg/                   # 矢量图标
+└── config/sounds.json     # 音效配置
+```
+
+---
 
 ## 🚀 快速开始
 
-1. **安装依赖**
-   ```bash
-   flutter pub get
-   ```
+```bash
+# 克隆项目
+git clone https://github.com/Clowrain/serenity_sound.git
+cd serenity_sound
 
-2. **生成持久化代码**
-   ```bash
-   flutter pub run build_runner build
-   ```
+# 安装依赖
+flutter pub get
 
-3. **运行**
-   ```bash
-   flutter run
-   ```
+# 生成 Hive 适配器
+flutter pub run build_runner build
 
-## 📝 配置指南
+# 运行
+flutter run
+```
 
-如需添加新音效：
-1. 将 `.mp3` 文件放入 `assets/audio/` 对应分类。
-2. 在 `assets/config/sounds.json` 中添加相应条目。
-3. 应用启动时会自动扫描并合并新资源，同时保留用户已有的音量和场景设置。
+---
+
+## 📝 添加新音效
+
+1. 将 `.mp3` 文件放入 `assets/audio/<分类>/`
+2. 在 `assets/config/sounds.json` 添加配置：
+
+```json
+{
+  "id": "nature_example",
+  "name": "示例音效",
+  "svgPath": "assets/svg/mdi-example.svg",
+  "audioPath": "assets/audio/nature/example.mp3",
+  "themeColor": "#38f9d7"
+}
+```
+
+3. 重启应用，自动加载新音效
+
+---
+
+## 📱 支持平台
+
+| 平台 | 状态 |
+|------|------|
+| Android | ✅ APK / AAB |
+| iOS | ✅ IPA |
+| macOS | ✅ DMG |
+
+---
 
 ## 📄 开源协议
 
-本项目采用 MIT 协议。
+[MIT License](LICENSE) © 2024 Serenity Sound
