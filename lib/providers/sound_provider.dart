@@ -191,6 +191,32 @@ class SceneNotifier extends StateNotifier<List<SoundScene>> {
     _storage.saveScenes(state);
   }
 
+  // 更新现有场景为当前配置
+  void updateScene(String id) {
+    final activeIds = _ref.read(activeSoundsProvider);
+    final allSounds = _ref.read(soundListProvider);
+    
+    final Map<String, double> config = {};
+    for (final soundId in activeIds) {
+      final sound = allSounds.firstWhere((s) => s.id == soundId);
+      config[soundId] = sound.volume;
+    }
+    
+    final soundOrder = allSounds.map((s) => s.id).toList();
+    
+    state = [
+      for (final s in state)
+        if (s.id == id) SoundScene(
+          id: s.id,
+          name: s.name,
+          soundConfig: config,
+          soundOrder: soundOrder,
+          color: s.color,
+        ) else s
+    ];
+    _storage.saveScenes(state);
+  }
+
   void deleteScene(String id) {
     state = state.where((s) => s.id != id).toList();
     _storage.saveScenes(state);

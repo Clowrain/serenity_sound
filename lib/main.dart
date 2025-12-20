@@ -385,14 +385,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF161616),
         title: const Text('编辑场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: '输入场景名称',
-            hintStyle: TextStyle(color: Colors.white24),
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              autofocus: true,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: '输入场景名称',
+                hintStyle: TextStyle(color: Colors.white24),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 覆盖保存按钮
+            TextButton.icon(
+              onPressed: () {
+                ref.read(sceneProvider.notifier).updateScene(scene.id);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('已保存到 "${scene.name}"'),
+                    duration: const Duration(seconds: 2),
+                    backgroundColor: const Color(0xFF38f9d7).withOpacity(0.8),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.save_rounded, size: 16, color: Colors.white54),
+              label: const Text('覆盖保存当前配置', style: TextStyle(color: Colors.white54, fontSize: 12)),
+            ),
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
@@ -404,7 +426,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
               Navigator.pop(context);
             },
-            child: const Text('保存'),
+            child: const Text('保存名称'),
           ),
         ],
       ),
