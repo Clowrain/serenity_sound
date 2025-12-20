@@ -42,7 +42,8 @@ final soundListProvider = StateNotifierProvider<SoundListNotifier, List<SoundEff
 
 class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
   final SerenityAudioHandler _handler;
-  ActiveSoundsNotifier(this._handler) : super({});
+  final Ref _ref;
+  ActiveSoundsNotifier(this._handler, this._ref) : super({});
 
   void toggle(SoundEffect sound) {
     if (state.contains(sound.id)) {
@@ -54,6 +55,23 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
       if (!_handler.playbackState.value.playing) {
         _handler.play();
       }
+    }
+  }
+
+  /// 清理掉不在前 12 名的激活音效
+  void cleanupNonTop12() {
+    final allSounds = _ref.read(soundListProvider);
+    final top12Ids = allSounds.take(12).map((e) => e.id).toSet();
+    
+    final toRemove = state.where((id) => !top12Ids.contains(id)).toList();
+    
+    if (toRemove.isNotEmpty) {
+      final newState = {...state};
+      for (final id in toRemove) {
+        newState.remove(id);
+        _handler.stopTrack(id);
+      }
+      state = newState;
     }
   }
 
@@ -86,7 +104,7 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
 }
 
 final activeSoundsProvider = StateNotifierProvider<ActiveSoundsNotifier, Set<String>>((ref) {
-  return ActiveSoundsNotifier(ref.watch(audioHandlerProvider));
+  return ActiveSoundsNotifier(ref.watch(audioHandlerProvider), ref);
 });
 
 // --- 场景模式 Provider ---

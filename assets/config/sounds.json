@@ -1,86 +1,569 @@
 [
   {
-    "id": "rain_heavy",
-    "name": "大雨滂沱",
-    "svgPath": "assets/svg/rain.svg",
-    "audioPath": "assets/audio/rain/heavy-rain.mp3",
-    "themeColor": "#4FACFE"
-  },
-  {
-    "id": "nature_waves",
-    "name": "澎湃海浪",
-    "svgPath": "assets/svg/ocean.svg",
-    "audioPath": "assets/audio/nature/waves.mp3",
-    "themeColor": "#00f2fe"
-  },
-  {
-    "id": "nature_wind",
-    "name": "山谷呼啸",
-    "svgPath": "assets/svg/wind.svg",
-    "audioPath": "assets/audio/nature/howling-wind.mp3",
-    "themeColor": "#A18CD1"
-  },
-  {
     "id": "nature_campfire",
-    "name": "哔啪篝火",
-    "svgPath": "assets/svg/fire.svg",
+    "name": "篝火",
+    "svgPath": "assets/svg/mdi-fire.svg",
     "audioPath": "assets/audio/nature/campfire.mp3",
-    "themeColor": "#f093fb"
+    "themeColor": "#38f9d7"
   },
   {
-    "id": "animals_birds",
-    "name": "晨曦鸟鸣",
-    "svgPath": "assets/svg/forest.svg",
-    "audioPath": "assets/audio/animals/birds.mp3",
-    "themeColor": "#43e97b"
+    "id": "nature_droplets",
+    "name": "水滴",
+    "svgPath": "assets/svg/mdi-water-drop.svg",
+    "audioPath": "assets/audio/nature/droplets.mp3",
+    "themeColor": "#38f9d7"
   },
   {
-    "id": "places_cafe",
-    "name": "午后咖啡",
-    "svgPath": "assets/svg/cafe.svg",
-    "audioPath": "assets/audio/places/cafe.mp3",
-    "themeColor": "#fee140"
+    "id": "nature_howling-wind",
+    "name": "狂风",
+    "svgPath": "assets/svg/mdi-weather-windy-variant.svg",
+    "audioPath": "assets/audio/nature/howling-wind.mp3",
+    "themeColor": "#38f9d7"
   },
   {
-    "id": "transport_train",
-    "name": "铁轨漫游",
-    "svgPath": "assets/svg/train.svg",
-    "audioPath": "assets/audio/transport/inside-a-train.mp3",
-    "themeColor": "#cd9cf2"
-  },
-  {
-    "id": "things_keyboard",
-    "name": "机械键盘",
-    "svgPath": "assets/svg/meditation.svg",
-    "audioPath": "assets/audio/things/keyboard.mp3",
-    "themeColor": "#7028e4"
-  },
-  {
-    "id": "urban_busy_street",
-    "name": "繁华街头",
-    "svgPath": "assets/svg/cafe.svg",
-    "audioPath": "assets/audio/urban/busy-street.mp3",
-    "themeColor": "#E2B0FF"
+    "id": "nature_jungle",
+    "name": "丛林",
+    "svgPath": "assets/svg/mdi-tree.svg",
+    "audioPath": "assets/audio/nature/jungle.mp3",
+    "themeColor": "#38f9d7"
   },
   {
     "id": "nature_river",
-    "name": "林间小溪",
-    "svgPath": "assets/svg/ocean.svg",
+    "name": "小溪",
+    "svgPath": "assets/svg/mdi-waves.svg",
     "audioPath": "assets/audio/nature/river.mp3",
     "themeColor": "#38f9d7"
   },
   {
+    "id": "nature_walk-in-snow",
+    "name": "雪地行走",
+    "svgPath": "assets/svg/mdi-snowflake.svg",
+    "audioPath": "assets/audio/nature/walk-in-snow.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "nature_walk-on-gravel",
+    "name": "石子路",
+    "svgPath": "assets/svg/mdi-landslide.svg",
+    "audioPath": "assets/audio/nature/walk-on-gravel.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "nature_walk-on-leaves",
+    "name": "落叶步履",
+    "svgPath": "assets/svg/mdi-leaf.svg",
+    "audioPath": "assets/audio/nature/walk-on-leaves.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "nature_waterfall",
+    "name": "瀑布",
+    "svgPath": "assets/svg/mdi-waterfall.svg",
+    "audioPath": "assets/audio/nature/waterfall.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "nature_waves",
+    "name": "海浪",
+    "svgPath": "assets/svg/mdi-waves-arrow-up.svg",
+    "audioPath": "assets/audio/nature/waves.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "nature_wind-in-trees",
+    "name": "林间风声",
+    "svgPath": "assets/svg/ph-tree-evergreen.svg",
+    "audioPath": "assets/audio/nature/wind-in-trees.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "nature_wind",
+    "name": "风声",
+    "svgPath": "assets/svg/mdi-weather-windy.svg",
+    "audioPath": "assets/audio/nature/wind.mp3",
+    "themeColor": "#38f9d7"
+  },
+  {
+    "id": "rain_heavy-rain",
+    "name": "暴雨",
+    "svgPath": "assets/svg/mdi-weather-lightning-rainy.svg",
+    "audioPath": "assets/audio/rain/heavy-rain.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "rain_light-rain",
+    "name": "小雨",
+    "svgPath": "assets/svg/mdi-weather-rainy.svg",
+    "audioPath": "assets/audio/rain/light-rain.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "rain_rain-on-car-roof",
+    "name": "车顶雨声",
+    "svgPath": "assets/svg/mdi-car.svg",
+    "audioPath": "assets/audio/rain/rain-on-car-roof.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "rain_rain-on-leaves",
+    "name": "雨打树叶",
+    "svgPath": "assets/svg/ph-leaf.svg",
+    "audioPath": "assets/audio/rain/rain-on-leaves.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "rain_rain-on-tent",
+    "name": "帐篷雨声",
+    "svgPath": "assets/svg/mdi-tent.svg",
+    "audioPath": "assets/audio/rain/rain-on-tent.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "rain_rain-on-umbrella",
+    "name": "雨打伞面",
+    "svgPath": "assets/svg/mdi-umbrella.svg",
+    "audioPath": "assets/audio/rain/rain-on-umbrella.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "rain_rain-on-window",
+    "name": "窗边雨声",
+    "svgPath": "assets/svg/mdi-window-open-variant.svg",
+    "audioPath": "assets/audio/rain/rain-on-window.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "rain_thunder",
+    "name": "惊雷",
+    "svgPath": "assets/svg/mdi-weather-lightning.svg",
+    "audioPath": "assets/audio/rain/thunder.mp3",
+    "themeColor": "#4FACFE"
+  },
+  {
+    "id": "animals_beehive",
+    "name": "蜂群",
+    "svgPath": "assets/svg/mdi-bee.svg",
+    "audioPath": "assets/audio/animals/beehive.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_birds",
+    "name": "鸟鸣",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/animals/birds.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_cat-purring",
+    "name": "猫咪呼噜",
+    "svgPath": "assets/svg/mdi-cat.svg",
+    "audioPath": "assets/audio/animals/cat-purring.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_chickens",
+    "name": "鸡鸣",
+    "svgPath": "assets/svg/mdi-feather.svg",
+    "audioPath": "assets/audio/animals/chickens.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_cows",
+    "name": "牛群",
+    "svgPath": "assets/svg/mdi-cow.svg",
+    "audioPath": "assets/audio/animals/cows.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_crickets",
+    "name": "虫鸣",
+    "svgPath": "assets/svg/mdi-bug.svg",
+    "audioPath": "assets/audio/animals/crickets.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_crows",
+    "name": "乌鸦",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/animals/crows.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_dog-barking",
+    "name": "犬吠",
+    "svgPath": "assets/svg/mdi-dog.svg",
+    "audioPath": "assets/audio/animals/dog-barking.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_frog",
+    "name": "青蛙",
+    "svgPath": "assets/svg/mdi-jump.svg",
+    "audioPath": "assets/audio/animals/frog.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_horse-gallop",
+    "name": "马蹄声",
+    "svgPath": "assets/svg/mdi-horse.svg",
+    "audioPath": "assets/audio/animals/horse-gallop.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_owl",
+    "name": "猫头鹰",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/animals/owl.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_seagulls",
+    "name": "海鸥",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/animals/seagulls.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_sheep",
+    "name": "羊群",
+    "svgPath": "assets/svg/mdi-sheep.svg",
+    "audioPath": "assets/audio/animals/sheep.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_whale",
+    "name": "鲸语",
+    "svgPath": "assets/svg/mdi-hydro-power.svg",
+    "audioPath": "assets/audio/animals/whale.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_wolf",
+    "name": "狼嚎",
+    "svgPath": "assets/svg/mdi-dog-side.svg",
+    "audioPath": "assets/audio/animals/wolf.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "animals_woodpecker",
+    "name": "啄木鸟",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/animals/woodpecker.mp3",
+    "themeColor": "#43e97b"
+  },
+  {
+    "id": "places_airport",
+    "name": "机场",
+    "svgPath": "assets/svg/mdi-airport.svg",
+    "audioPath": "assets/audio/places/airport.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_cafe",
+    "name": "咖啡厅",
+    "svgPath": "assets/svg/mdi-coffee.svg",
+    "audioPath": "assets/audio/places/cafe.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_carousel",
+    "name": "旋转木马",
+    "svgPath": "assets/svg/mdi-car-child-seat.svg",
+    "audioPath": "assets/audio/places/carousel.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_church",
+    "name": "教堂",
+    "svgPath": "assets/svg/mdi-church.svg",
+    "audioPath": "assets/audio/places/church.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_construction-site",
+    "name": "建筑工地",
+    "svgPath": "assets/svg/mdi-hammer-wrench.svg",
+    "audioPath": "assets/audio/places/construction-site.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_crowded-bar",
+    "name": "嘈杂酒吧",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/places/crowded-bar.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_laboratory",
+    "name": "实验室",
+    "svgPath": "assets/svg/mdi-flask.svg",
+    "audioPath": "assets/audio/places/laboratory.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_laundry-room",
+    "name": "洗衣房",
+    "svgPath": "assets/svg/mdi-washing-machine.svg",
+    "audioPath": "assets/audio/places/laundry-room.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_library",
+    "name": "图书馆",
+    "svgPath": "assets/svg/mdi-library.svg",
+    "audioPath": "assets/audio/places/library.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_night-village",
+    "name": "夜晚村庄",
+    "svgPath": "assets/svg/mdi-home-group.svg",
+    "audioPath": "assets/audio/places/night-village.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_office",
+    "name": "办公室",
+    "svgPath": "assets/svg/mdi-briefcase.svg",
+    "audioPath": "assets/audio/places/office.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_restaurant",
+    "name": "餐厅",
+    "svgPath": "assets/svg/mdi-silverware-fork-knife.svg",
+    "audioPath": "assets/audio/places/restaurant.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_subway-station",
+    "name": "地铁站",
+    "svgPath": "assets/svg/mdi-subway.svg",
+    "audioPath": "assets/audio/places/subway-station.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_supermarket",
+    "name": "超市",
+    "svgPath": "assets/svg/mdi-cart.svg",
+    "audioPath": "assets/audio/places/supermarket.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_temple",
+    "name": "寺庙",
+    "svgPath": "assets/svg/mdi-temple-buddhist.svg",
+    "audioPath": "assets/audio/places/temple.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "places_underwater",
+    "name": "水下世界",
+    "svgPath": "assets/svg/mdi-waves.svg",
+    "audioPath": "assets/audio/places/underwater.mp3",
+    "themeColor": "#fee140"
+  },
+  {
+    "id": "transport_airplane",
+    "name": "飞机",
+    "svgPath": "assets/svg/mdi-airplane.svg",
+    "audioPath": "assets/audio/transport/airplane.mp3",
+    "themeColor": "#cd9cf2"
+  },
+  {
+    "id": "transport_inside-a-train",
+    "name": "车厢内",
+    "svgPath": "assets/svg/mdi-weather-pouring.svg",
+    "audioPath": "assets/audio/transport/inside-a-train.mp3",
+    "themeColor": "#cd9cf2"
+  },
+  {
+    "id": "transport_rowing-boat",
+    "name": "划船",
+    "svgPath": "assets/svg/mdi-rowing.svg",
+    "audioPath": "assets/audio/transport/rowing-boat.mp3",
+    "themeColor": "#cd9cf2"
+  },
+  {
+    "id": "transport_sailboat",
+    "name": "帆船",
+    "svgPath": "assets/svg/mdi-sail-boat.svg",
+    "audioPath": "assets/audio/transport/sailboat.mp3",
+    "themeColor": "#cd9cf2"
+  },
+  {
+    "id": "transport_submarine",
+    "name": "潜艇",
+    "svgPath": "assets/svg/mdi-ferry.svg",
+    "audioPath": "assets/audio/transport/submarine.mp3",
+    "themeColor": "#cd9cf2"
+  },
+  {
+    "id": "transport_train",
+    "name": "火车",
+    "svgPath": "assets/svg/mdi-weather-pouring.svg",
+    "audioPath": "assets/audio/transport/train.mp3",
+    "themeColor": "#cd9cf2"
+  },
+  {
+    "id": "things_boiling-water",
+    "name": "沸水声",
+    "svgPath": "assets/svg/mdi-stove.svg",
+    "audioPath": "assets/audio/things/boiling-water.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_bubbles",
+    "name": "气泡",
+    "svgPath": "assets/svg/mdi-dots-hexagon.svg",
+    "audioPath": "assets/audio/things/bubbles.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_ceiling-fan",
+    "name": "吊扇",
+    "svgPath": "assets/svg/mdi-fan.svg",
+    "audioPath": "assets/audio/things/ceiling-fan.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
     "id": "things_clock",
-    "name": "时光滴答",
-    "svgPath": "assets/svg/meditation.svg",
+    "name": "时钟",
+    "svgPath": "assets/svg/mdi-clock.svg",
     "audioPath": "assets/audio/things/clock.mp3",
     "themeColor": "#fa709a"
   },
   {
-    "id": "nature_forest",
-    "name": "幽静林间",
-    "svgPath": "assets/svg/forest.svg",
-    "audioPath": "assets/audio/nature/wind-in-trees.mp3",
-    "themeColor": "#5ee7df"
+    "id": "things_dryer",
+    "name": "烘干机",
+    "svgPath": "assets/svg/mdi-tumble-dryer.svg",
+    "audioPath": "assets/audio/things/dryer.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_keyboard",
+    "name": "键盘",
+    "svgPath": "assets/svg/mdi-keyboard.svg",
+    "audioPath": "assets/audio/things/keyboard.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_morse-code",
+    "name": "摩斯密码",
+    "svgPath": "assets/svg/mdi-dots-horizontal.svg",
+    "audioPath": "assets/audio/things/morse-code.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_paper",
+    "name": "纸张",
+    "svgPath": "assets/svg/mdi-file-document.svg",
+    "audioPath": "assets/audio/things/paper.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_singing-bowl",
+    "name": "颂钵",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/things/singing-bowl.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_slide-projector",
+    "name": "幻灯机",
+    "svgPath": "assets/svg/mdi-projector.svg",
+    "audioPath": "assets/audio/things/slide-projector.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_tuning-radio",
+    "name": "调频广播",
+    "svgPath": "assets/svg/mdi-radio.svg",
+    "audioPath": "assets/audio/things/tuning-radio.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_typewriter",
+    "name": "打字机",
+    "svgPath": "assets/svg/mdi-typewriter.svg",
+    "audioPath": "assets/audio/things/typewriter.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_vinyl-effect",
+    "name": "黑胶唱片",
+    "svgPath": "assets/svg/mdi-record-player.svg",
+    "audioPath": "assets/audio/things/vinyl-effect.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_washing-machine",
+    "name": "洗衣机",
+    "svgPath": "assets/svg/mdi-washing-machine.svg",
+    "audioPath": "assets/audio/things/washing-machine.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_wind-chimes",
+    "name": "风铃",
+    "svgPath": "assets/svg/mdi-bell-ring.svg",
+    "audioPath": "assets/audio/things/wind-chimes.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "things_windshield-wipers",
+    "name": "雨刷器",
+    "svgPath": "assets/svg/mdi-weather-windy.svg",
+    "audioPath": "assets/audio/things/windshield-wipers.mp3",
+    "themeColor": "#fa709a"
+  },
+  {
+    "id": "urban_ambulance-siren",
+    "name": "救护车",
+    "svgPath": "assets/svg/mdi-alarm-light.svg",
+    "audioPath": "assets/audio/urban/ambulance-siren.mp3",
+    "themeColor": "#E2B0FF"
+  },
+  {
+    "id": "urban_busy-street",
+    "name": "繁华街道",
+    "svgPath": "assets/svg/mdi-city.svg",
+    "audioPath": "assets/audio/urban/busy-street.mp3",
+    "themeColor": "#E2B0FF"
+  },
+  {
+    "id": "urban_crowd",
+    "name": "人群",
+    "svgPath": "assets/svg/mdi-bird.svg",
+    "audioPath": "assets/audio/urban/crowd.mp3",
+    "themeColor": "#E2B0FF"
+  },
+  {
+    "id": "urban_fireworks",
+    "name": "烟花",
+    "svgPath": "assets/svg/mdi-firework.svg",
+    "audioPath": "assets/audio/urban/fireworks.mp3",
+    "themeColor": "#E2B0FF"
+  },
+  {
+    "id": "urban_highway",
+    "name": "公路",
+    "svgPath": "assets/svg/mdi-road-variant.svg",
+    "audioPath": "assets/audio/urban/highway.mp3",
+    "themeColor": "#E2B0FF"
+  },
+  {
+    "id": "urban_road",
+    "name": "马路",
+    "svgPath": "assets/svg/mdi-road.svg",
+    "audioPath": "assets/audio/urban/road.mp3",
+    "themeColor": "#E2B0FF"
+  },
+  {
+    "id": "urban_traffic",
+    "name": "交通流",
+    "svgPath": "assets/svg/mdi-traffic-light.svg",
+    "audioPath": "assets/audio/urban/traffic.mp3",
+    "themeColor": "#E2B0FF"
   }
 ]

@@ -128,7 +128,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
                     final scene = scenes[index];
                     return GestureDetector(
-                      onTap: () => ref.read(activeSoundsProvider.notifier).applyScene(scene.soundConfig, sounds),
+                      onTap: () {
+                        ref.read(activeSoundsProvider.notifier).applyScene(scene.soundConfig, sounds);
+                        // 首页应用场景后，立即清理非前 12 音效
+                        ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+                      },
                       onLongPress: () => _confirmDeleteScene(context, ref, scene), // 新增长按监听
                       child: Container(
                         margin: const EdgeInsets.only(right: 12),
@@ -336,7 +340,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
       ),
       builder: (context) => const MixerPanel(),
-    );
+    ).then((_) {
+      // 面板关闭时，清理掉非前 12 的音效
+      ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+    });
   }
 }
 
