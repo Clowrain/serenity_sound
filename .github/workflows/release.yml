@@ -16,11 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Flutter (from pubspec.yaml)
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          flutter-version-file: pubspec.yaml  # 从 pubspec 读取 Flutter 版本
+          flutter-version: '3.32.0'
           cache: true
 
       - name: Flutter pub get
@@ -58,11 +57,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Flutter (from pubspec.yaml)
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          flutter-version-file: pubspec.yaml  # 从 pubspec 读取 Flutter 版本
+          flutter-version: '3.32.0'
           cache: true
 
       - name: Flutter pub get
