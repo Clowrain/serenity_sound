@@ -1,0 +1,157 @@
+name: Build and Release serenity_soundon:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ============================
+  # 1. 构建 Android (APK + AAB)
+  # ============================
+  build-android:
+    runs-on: ubuntu-latest  # Android 构建在 Ubuntu 环境中进行
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter (from pubspec.yaml)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml  # 从 pubspec 读取 Flutter 版本
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # ---- Build APK ----
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      # ---- Build AAB ----
+      - name: Build Android App Bundle
+        run: flutter build appbundle --release
+
+      # ---- Rename outputs to sound_box.xxx ----
+      - name: Rename Android outputs
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk sound_box.apk
+          mv build/app/outputs/bundle/release/app-release.aab sound_box.aab
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: |
+            sound_box.apk
+            sound_box.aab
+
+  # ============================
+  # 2. 构建并归档 iOS 和 macOS
+  # ============================
+  build-macos-ios:
+    runs-on: macos-latest  # 必须使用 macOS 环境来运行 Xcode
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter (from pubspec.yaml)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml  # 从 pubspec 读取 Flutter 版本
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # -------- macOS: sound_box.dmg --------
+      - name: Build macOS app
+        run: flutter build macos --release
+
+      - name: Create sound_box.dmg
+        run: |
+          cd build/macos/Build/Products/Release
+          APP_BUNDLE=$(find . -name "*.app" | head -n 1)
+          echo "Using macOS app: $APP_BUNDLE"
+          # 使用 hdiutil 生成 DMG
+          hdiutil create -volname "sound_box" \
+            -srcfolder "$APP_BUNDLE" \
+            -ov -format UDZO "sound_box.dmg"
+          # 移动到仓库根目录
+          mv sound_box.dmg ../../../../..
+          cd ../../../../..
+
+      # -------- iOS: sound_box.ipa --------
+      - name: Build iOS app (no codesign)
+        run: |
+          # 生成 iOS 应用，不进行签名
+          flutter build ios --release --no-codesign
+
+          # 进入到 iOS 构建目录，找到生成的 .app 文件
+          APP_PATH="build/ios/iphoneos/Runner.app"
+
+          # 将 .app 文件压缩并生成 .ipa 文件
+          mkdir -p Payload
+          cp -R $APP_PATH Payload/
+          zip -r sound_box.ipa Payload
+
+      - name: Upload macOS & iOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-ios-artifacts
+          path: |
+            sound_box.dmg
+            sound_box.ipa
+
+  # ============================
+  # 3. 创建 GitHub Release 并上传产物
+  # ============================
+  create-release:
+    runs-on: ubuntu-latest
+    needs:
+      - build-android
+      - build-macos-ios
+
+    permissions:
+      contents: write   # 需要写权限创建 Release
+
+    steps:
+      # 确保切换到项目根目录，然后读取版本号
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 读取版本号并创建 GitHub Release
+      - name: Read version from pubspec.yaml
+        run: |
+          # 确保切换到项目根目录
+          cd $GITHUB_WORKSPACE
+          VERSION=$(awk -F': ' '/^version:/ {gsub("\\+", "-", $2); print $2}' pubspec.yaml)
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Show version
+        run: echo "App version from pubspec.yaml = $APP_VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Show downloaded files
+        run: ls -R dist
+
+      - name: Create GitHub Release & upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          name: "sound_box ${{ env.APP_VERSION }}"
+          draft: false
+          prerelease: false
+          files: |
+            dist/android-artifacts/sound_box.apk
+            dist/android-artifacts/sound_box.aab
+            dist/macos-ios-artifacts/sound_box.dmg
+            dist/macos-ios-artifacts/sound_box.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
