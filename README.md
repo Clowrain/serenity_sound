@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">🌙 Serenity Sound</h1>
-  <p align="center">极简主义环境音效混音应用 · 专为放松、冥想与专注而设计</p>
+  <p align="center">极简主义环境音效混音应用 · 专为放松、冥想与专注而设计的白噪音应用</p>
 </p>
 
 <p align="center">
