@@ -22,34 +22,30 @@ class StorageService {
     final List<dynamic> jsonList = json.decode(jsonString);
     
     final List<dynamic> storedData = box.get(_keySounds, defaultValue: []);
-    final Map<String, dynamic> storedMap = {
-      for (var item in storedData) item['id']: item
+    
+    // 分离本地和远程音效
+    final List<dynamic> storedRemoteSounds = storedData.where((item) => item['isRemote'] == true).toList();
+    final Map<String, dynamic> storedLocalMap = {
+      for (var item in storedData.where((item) => item['isRemote'] != true)) 
+        item['id']: item
     };
 
-    // 以 JSON 配置为准，但保留已存储的音量
-    final newList = jsonList.map((config) {
+    // 以 JSON 配置为准同步本地音效，但保留已存储的音量
+    final syncedLocalList = jsonList.map((config) {
       final id = config['id'];
-      if (storedMap.containsKey(id)) {
+      if (storedLocalMap.containsKey(id)) {
         return {
           ...config,
-          'volume': storedMap[id]['volume'] ?? config['volume'],
+          'volume': storedLocalMap[id]['volume'] ?? config['volume'],
         };
       }
       return config;
     }).toList();
 
-    // 如果存储中的顺序存在，尽量维持顺序
-    // 这里简单处理：如果长度不一致，说明有新增，直接用新的（或者您可以做更复杂的 merge）
-    if (storedData.length == newList.length) {
-       // 维持原有顺序
-       final orderedList = storedData.map((s) {
-         final match = newList.firstWhere((n) => n['id'] == s['id'], orElse: () => null);
-         return match ?? s;
-       }).toList();
-       await box.put(_keySounds, orderedList);
-    } else {
-       await box.put(_keySounds, newList);
-    }
+    // 合并：本地音效 + 远程音效（远程音效追加在后面）
+    final List<dynamic> newList = [...syncedLocalList, ...storedRemoteSounds];
+
+    await box.put(_keySounds, newList);
 
     if (box.get(_keyScenes) == null) {
       // 只保留示例场景，不再有"默认"场景
