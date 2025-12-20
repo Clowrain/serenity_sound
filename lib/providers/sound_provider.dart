@@ -267,6 +267,47 @@ class SceneNotifier extends StateNotifier<List<SoundScene>> {
     state = state.where((s) => s.id != id).toList();
     _storage.saveScenes(state);
   }
+
+  /// 从所有场景中移除指定的音效 ID
+  void removeSoundIds(List<String> ids) {
+    if (ids.isEmpty) return;
+    
+    final idSet = ids.toSet();
+    bool changed = false;
+    
+    final newScenes = <SoundScene>[];
+    
+    for (final scene in state) {
+      // 检查该场景是否包含需要移除的音效
+      final hasOverlap = scene.soundConfig.keys.any((id) => idSet.contains(id)) ||
+                         scene.soundOrder.any((id) => idSet.contains(id));
+      
+      if (hasOverlap) {
+        changed = true;
+        // 移除配置中的音效
+        final newConfig = Map<String, double>.from(scene.soundConfig)
+          ..removeWhere((key, _) => idSet.contains(key));
+          
+        // 移除排序中的音效
+        final newOrder = scene.soundOrder.where((id) => !idSet.contains(id)).toList();
+        
+        newScenes.add(SoundScene(
+          id: scene.id,
+          name: scene.name,
+          soundConfig: newConfig,
+          soundOrder: newOrder,
+          color: scene.color,
+        ));
+      } else {
+        newScenes.add(scene);
+      }
+    }
+    
+    if (changed) {
+      state = newScenes;
+      _storage.saveScenes(state);
+    }
+  }
 }
 
 final sceneProvider = StateNotifierProvider<SceneNotifier, List<SoundScene>>((ref) {

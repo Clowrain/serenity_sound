@@ -170,6 +170,37 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
     _storage.saveRemoteSources(state);
   }
 
+  /// 从来源中移除单个音效
+  Future<void> removeSoundFromSource(String sourceId, String soundId) async {
+    // 1. 查找来源
+    final sourceIndex = state.indexWhere((s) => s.id == sourceId);
+    if (sourceIndex == -1) return;
+    
+    final source = state[sourceIndex];
+    
+    // 2. 从音效列表中移除
+    _ref.read(soundListProvider.notifier).removeRemoteSounds([soundId]);
+    
+    // 3. 清除缓存
+    await _cacheService.deleteSourceCache([soundId]);
+    
+    // 4. 更新来源记录
+    final updatedSoundIds = source.soundIds.where((id) => id != soundId).toList();
+    final updatedSource = RemoteSource(
+      id: source.id,
+      url: source.url,
+      name: source.name,
+      soundIds: updatedSoundIds,
+      addedAt: source.addedAt,
+    );
+    
+    final newState = [...state];
+    newState[sourceIndex] = updatedSource;
+    state = newState;
+    
+    _storage.saveRemoteSources(state);
+  }
+
   /// 刷新远程来源
   Future<LoadResult> refreshSource(String sourceId) async {
     final source = state.firstWhere((s) => s.id == sourceId);
@@ -191,6 +222,28 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
       }
     } catch (_) {}
     return '远程音效包';
+  }
+
+  /// 清空所有远程音效数据（包括缓存文件、列表和音效包）
+  Future<void> clearAllRemoteSources() async {
+    // 1. 获取当前所有远程音效
+    final allSounds = _ref.read(soundListProvider);
+    final remoteSoundIds = allSounds.where((s) => s.isRemote).map((s) => s.id).toList();
+
+    if (remoteSoundIds.isEmpty) return;
+
+    // 2. 清理文件缓存
+    await _cacheService.clearAllCache();
+
+    // 3. 从音效列表中移除
+    _ref.read(soundListProvider.notifier).removeRemoteSounds(remoteSoundIds);
+
+    // 4. 从所有场景中移除这些音效
+    _ref.read(sceneProvider.notifier).removeSoundIds(remoteSoundIds);
+
+    // 5. 清空远程来源记录
+    state = [];
+    await _storage.saveRemoteSources([]);
   }
 }
 

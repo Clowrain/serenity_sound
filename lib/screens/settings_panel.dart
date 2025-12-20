@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/sound_effect.dart';
+import '../providers/sound_provider.dart';
 import '../services/remote_source_service.dart';
 import '../services/asset_cache_service.dart';
+import '../widgets/svg_icon.dart';
 
 class SettingsPanel extends ConsumerStatefulWidget {
   const SettingsPanel({super.key});
@@ -33,6 +35,8 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
   @override
   Widget build(BuildContext context) {
     final remoteSources = ref.watch(remoteSourceServiceProvider);
+    final allSounds = ref.watch(soundListProvider);
+    final remoteSounds = allSounds.where((s) => s.isRemote).toList();
     final cacheService = ref.read(assetCacheServiceProvider);
 
     return Container(
@@ -107,20 +111,47 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
               ),
             ),
 
-          // 来源列表
+          // 远程音效列表
           Expanded(
-            child: remoteSources.isEmpty
+            child: remoteSounds.isEmpty
                 ? const Center(
                     child: Text(
-                      '暂无远程音效包',
+                      '暂无远程音效',
                       style: TextStyle(color: Colors.white24, fontSize: 12),
                     ),
                   )
-                : ListView.builder(
-                    itemCount: remoteSources.length,
+                : ListView.separated(
+                    itemCount: remoteSounds.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.white10),
                     itemBuilder: (context, index) {
-                      final source = remoteSources[index];
-                      return _buildSourceCard(source);
+                      final sound = remoteSounds[index];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Center(
+                            child: SvgIcon(
+                              path: sound.svgPath,
+                              width: 24,
+                              height: 24,
+                              colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          sound.name,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                          onPressed: () => _deleteSound(sound),
+                        ),
+                      );
                     },
                   ),
           ),
@@ -150,9 +181,9 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
                 ],
               ),
               TextButton.icon(
-                onPressed: _clearCache,
-                icon: const Icon(Icons.delete_outline, size: 18),
-                label: const Text('清除缓存'),
+                onPressed: _clearAllRemoteSounds,
+                icon: const Icon(Icons.delete_forever_outlined, size: 18),
+                label: const Text('清空所有远程音效'),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.redAccent.withOpacity(0.7),
                 ),
@@ -164,34 +195,28 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
     );
   }
 
-  Widget _buildSourceCard(RemoteSource source) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      color: Colors.white.withOpacity(0.03),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        title: Text(
-          source.name,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+  void _deleteSound(SoundEffect sound) async {
+    if (sound.sourceId == null) {
+      // 容错处理：没有 sourceId 的情况（旧数据？）
+      // 仍然尝试清理文件并从列表中移除
+      await ref.read(assetCacheServiceProvider).deleteSourceCache([sound.id]);
+      ref.read(soundListProvider.notifier).removeRemoteSounds([sound.id]);
+    } else {
+      await ref.read(remoteSourceServiceProvider.notifier).removeSoundFromSource(sound.sourceId!, sound.id);
+    }
+    
+    // 刷新缓存大小
+    await _loadCacheSize();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已移除 ${sound.name}'),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
         ),
-        subtitle: Text(
-          '${source.soundIds.length} 个音效',
-          style: const TextStyle(color: Colors.white38, fontSize: 11),
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-          onPressed: () => _confirmDeleteSource(source),
-        ),
-      ),
-    );
+      );
+    }
   }
 
   void _showAddSourceDialog() {
@@ -322,6 +347,9 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
           ),
         );
       }
+      
+      // 刷新缓存大小
+      await _loadCacheSize();
     } catch (e) {
       if (mounted) Navigator.pop(context); // 确保关闭 dialog
       if (mounted) {
@@ -335,37 +363,7 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
     }
   }
 
-  void _confirmDeleteSource(RemoteSource source) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161616),
-        title: const Text('删除音效包', style: TextStyle(color: Colors.white70, fontSize: 16)),
-        content: Text(
-          '确定要删除 "${source.name}" 吗？\n相关的 ${source.soundIds.length} 个音效将被移除。',
-          style: const TextStyle(color: Colors.white38),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref.read(remoteSourceServiceProvider.notifier).removeSource(source.id);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('已删除音效包')),
-                );
-              }
-            },
-            child: const Text('删除', style: TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showFailureDialog(Map<String, String> failures) {
     showDialog(
@@ -429,13 +427,38 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
     );
   }
 
-  Future<void> _clearCache() async {
-    final cacheService = ref.read(assetCacheServiceProvider);
-    await cacheService.clearAllCache();
+  Future<void> _clearAllRemoteSounds() async {
+    // 显示确认对话框
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF161616),
+        title: const Text('确认清空？', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+          '这将删除所有已下载的远程音效和音效包。\n保存的场景中相关的音效也会被移除。',
+          style: TextStyle(color: Colors.white38),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('清空', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await ref.read(remoteSourceServiceProvider.notifier).clearAllRemoteSources();
     await _loadCacheSize();
+    
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('缓存已清除')),
+        const SnackBar(content: Text('所有远程音效数据已清空')),
       );
     }
   }
