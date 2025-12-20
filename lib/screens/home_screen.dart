@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +9,8 @@ import '../services/audio_handler.dart';
 import '../widgets/breathing_logo.dart';
 import '../widgets/control_buttons.dart';
 import '../widgets/scene_widgets.dart';
+import '../widgets/toast.dart';
+import '../theme/serenity_theme.dart';
 import 'mixer_panel.dart';
 import 'timer_panel.dart';
 import 'settings_panel.dart';
@@ -56,14 +59,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final top12 = sounds.take(12).toList();
 
     return Scaffold(
+      backgroundColor: SerenityTheme.background,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: RadialGradient(
             center: Alignment.center,
             radius: 1.2,
             colors: [
-              Color(0xFF161616),
-              Color(0xFF050505),
+              SerenityTheme.secondaryBackground,
+              SerenityTheme.background,
             ],
           ),
         ),
@@ -295,11 +299,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ControlKnob(
-                      icon: Icons.grid_view_rounded,
+                      icon: CupertinoIcons.slider_horizontal_3,
                       onPressed: () => _showMixerPanel(context),
                     ),
                     ControlKnob(
-                      icon: Icons.hourglass_empty_rounded,
+                      icon: CupertinoIcons.timer,
                       onPressed: () => _showTimerPanel(context),
                     ),
                     MasterButton(
@@ -307,7 +311,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onPressed: () => isGlobalPlaying ? handler.pause() : handler.play(),
                     ),
                     ControlKnob(
-                      icon: Icons.settings_outlined,
+                      icon: CupertinoIcons.gear,
                       onPressed: () => _showSettingsPanel(context),
                     ),
                   ],
@@ -379,13 +383,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () {
                 ref.read(sceneProvider.notifier).updateScene(scene.id);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('已保存到 "${scene.name}"'),
-                    duration: const Duration(seconds: 2),
-                    backgroundColor: const Color(0xFF38f9d7).withOpacity(0.8),
-                  ),
-                );
+                showToast(context, '已保存到 "${scene.name}"');
               },
               icon: const Icon(Icons.save_rounded, size: 16, color: Colors.white54),
               label: const Text('覆盖保存当前配置', style: TextStyle(color: Colors.white54, fontSize: 12)),

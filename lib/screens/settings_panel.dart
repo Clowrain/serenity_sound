@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/sound_effect.dart';
@@ -5,6 +6,9 @@ import '../providers/sound_provider.dart';
 import '../services/remote_source_service.dart';
 import '../services/asset_cache_service.dart';
 import '../widgets/svg_icon.dart';
+import '../widgets/cupertino_card.dart';
+import '../widgets/toast.dart';
+import '../theme/serenity_theme.dart';
 
 class SettingsPanel extends ConsumerStatefulWidget {
   const SettingsPanel({super.key});
@@ -40,157 +44,237 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
     final cacheService = ref.read(assetCacheServiceProvider);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
-      padding: const EdgeInsets.all(24),
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: BoxDecoration(
+        color: SerenityTheme.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(SerenityTheme.radiusXLarge)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 标题栏
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '设置',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
-                  letterSpacing: 2,
+          // iOS-style drag handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 8),
+              width: 36,
+              height: 5,
+              decoration: BoxDecoration(
+                color: SerenityTheme.tertiaryText,
+                borderRadius: BorderRadius.circular(2.5),
+              ),
+            ),
+          ),
+          
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('设置', style: SerenityTheme.title2),
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => Navigator.pop(context),
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: SerenityTheme.tertiaryBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.xmark,
+                      color: SerenityTheme.secondaryText,
+                      size: 14,
+                    ),
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white38),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const Divider(color: Colors.white10, height: 32),
-
-          // 远程音效包
-          const Text(
-            '远程音效包',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.white54,
-              letterSpacing: 1,
+              ],
             ),
           ),
-          const SizedBox(height: 12),
 
-          // 添加按钮
-          OutlinedButton.icon(
-            onPressed: _isLoading ? null : _showAddSourceDialog,
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('添加音效包'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white54,
-              side: const BorderSide(color: Colors.white24),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 加载状态
-          if (_isLoading)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    _loadingMessage ?? '加载中...',
-                    style: const TextStyle(color: Colors.white38, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-
-          // 远程音效列表
+          // Content
           Expanded(
-            child: remoteSounds.isEmpty
-                ? const Center(
-                    child: Text(
-                      '暂无远程音效',
-                      style: TextStyle(color: Colors.white24, fontSize: 12),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                // Remote Sounds Section
+                const CupertinoSectionHeader(text: '远程音效'),
+                
+                CupertinoCard(
+                  child: Column(
+                    children: [
+                      // Add button
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        onPressed: _isLoading ? null : _showAddSourceDialog,
+                        child: Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.add_circled,
+                              color: SerenityTheme.accent,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '添加音效包',
+                              style: SerenityTheme.body.copyWith(color: SerenityTheme.accent),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Loading indicator
+                      if (_isLoading) ...[
+                        Container(height: 0.5, color: SerenityTheme.separator),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              const CupertinoActivityIndicator(radius: 10),
+                              const SizedBox(width: 12),
+                              Text(
+                                _loadingMessage ?? '加载中...',
+                                style: SerenityTheme.subheadline,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Sounds list
+                if (remoteSounds.isNotEmpty)
+                  CupertinoCard(
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < remoteSounds.length; i++) ...[
+                          _buildSoundTile(remoteSounds[i]),
+                          if (i < remoteSounds.length - 1)
+                            Container(
+                              margin: const EdgeInsets.only(left: 56),
+                              height: 0.5,
+                              color: SerenityTheme.separator,
+                            ),
+                        ],
+                      ],
                     ),
                   )
-                : ListView.separated(
-                    itemCount: remoteSounds.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.white10),
-                    itemBuilder: (context, index) {
-                      final sound = remoteSounds[index];
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        leading: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Center(
-                            child: SvgIcon(
-                              path: sound.svgPath,
-                              width: 24,
-                              height: 24,
-                              colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          sound.name,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                          onPressed: () => _deleteSound(sound),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-
-          const Divider(color: Colors.white10, height: 32),
-
-          // 缓存信息
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '缓存大小',
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    cacheService.formatCacheSize(_cacheSize),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Center(
+                      child: Text(
+                        '暂无远程音效',
+                        style: SerenityTheme.subheadline,
+                      ),
                     ),
                   ),
-                ],
-              ),
-              TextButton.icon(
-                onPressed: _clearAllRemoteSounds,
-                icon: const Icon(Icons.delete_forever_outlined, size: 18),
-                label: const Text('清空所有远程音效'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.redAccent.withOpacity(0.7),
+                
+                const SizedBox(height: 24),
+
+                // Cache Section
+                const CupertinoSectionHeader(text: '存储'),
+                
+                CupertinoCard(
+                  child: Column(
+                    children: [
+                      // Cache size display
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('缓存大小', style: SerenityTheme.body),
+                            Text(
+                              cacheService.formatCacheSize(_cacheSize),
+                              style: SerenityTheme.body.copyWith(
+                                color: SerenityTheme.secondaryText,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(height: 0.5, color: SerenityTheme.separator),
+                      // Clear all button
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        onPressed: _clearAllRemoteSounds,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '清空所有远程音效',
+                              style: SerenityTheme.body.copyWith(
+                                color: SerenityTheme.systemRed,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSoundTile(SoundEffect sound) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: SerenityTheme.tertiaryBackground,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: SvgIcon(
+                  path: sound.svgPath,
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(
+                    SerenityTheme.secondaryText,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                sound.name,
+                style: SerenityTheme.body,
+              ),
+            ),
+            CupertinoButton(
+              padding: const EdgeInsets.all(8),
+              minSize: 0,
+              onPressed: () => _deleteSound(sound),
+              child: const Icon(
+                CupertinoIcons.minus_circle,
+                color: SerenityTheme.systemRed,
+                size: 22,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -209,52 +293,48 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
     await _loadCacheSize();
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('已移除 ${sound.name}'),
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showToast(context, '已移除 ${sound.name}');
     }
   }
 
   void _showAddSourceDialog() {
     final controller = TextEditingController();
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161616),
-        title: const Text(
-          '添加音效包',
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              decoration: const InputDecoration(
-                hintText: '输入配置文件 URL',
-                hintStyle: TextStyle(color: Colors.white24),
-                prefixIcon: Icon(Icons.link, color: Colors.white24, size: 18),
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('添加音效包'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CupertinoTextField(
+                controller: controller,
+                autofocus: true,
+                placeholder: '输入配置文件 URL',
+                placeholderStyle: TextStyle(color: CupertinoColors.systemGrey),
+                style: const TextStyle(color: CupertinoColors.white),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.darkBackgroundGray,
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '支持 JSON 格式的音效配置文件',
-              style: TextStyle(color: Colors.white24, fontSize: 10),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                '支持 JSON 格式的音效配置文件',
+                style: SerenityTheme.caption1,
+              ),
+            ],
+          ),
         ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
             onPressed: () => Navigator.pop(context),
             child: const Text('取消'),
           ),
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () {
               final url = controller.text.trim();
               if (url.isNotEmpty) {
@@ -311,6 +391,9 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
 
       // 关闭进度对话框
       if (mounted) Navigator.pop(context);
+      
+      // 立即刷新缓存大小
+      await _loadCacheSize();
 
       if (!mounted) return;
 
@@ -326,13 +409,10 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
           _showFailureDialog(result.failed);
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: result.hasFailures
-                ? Colors.orange.withOpacity(0.8)
-                : const Color(0xFF38f9d7).withOpacity(0.8),
-          ),
+        showToast(
+          context, 
+          message, 
+          isError: result.hasFailures,
         );
       } else {
         // 完全失败
@@ -340,25 +420,16 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
           _showFailureDialog(result.failed);
         }
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.error ?? '加载失败'),
-            backgroundColor: Colors.redAccent.withOpacity(0.8),
-          ),
+        showToast(
+          context, 
+          result.error ?? '加载失败', 
+          isError: true,
         );
       }
-      
-      // 刷新缓存大小
-      await _loadCacheSize();
     } catch (e) {
       if (mounted) Navigator.pop(context); // 确保关闭 dialog
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('发生错误: $e'),
-            backgroundColor: Colors.redAccent.withOpacity(0.8),
-          ),
-        );
+        showToast(context, '发生错误: $e', isError: true);
       }
     }
   }
@@ -429,23 +500,23 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
 
   Future<void> _clearAllRemoteSounds() async {
     // 显示确认对话框
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161616),
-        title: const Text('确认清空？', style: TextStyle(color: Colors.white70)),
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('确认清空？'),
         content: const Text(
           '这将删除所有已下载的远程音效和音效包。\n保存的场景中相关的音效也会被移除。',
-          style: TextStyle(color: Colors.white38),
         ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
             onPressed: () => Navigator.pop(context, false),
             child: const Text('取消'),
           ),
-          TextButton(
+          CupertinoDialogAction(
+            isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('清空', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('清空'),
           ),
         ],
       ),
@@ -457,9 +528,7 @@ class _SettingsPanelState extends ConsumerState<SettingsPanel> {
     await _loadCacheSize();
     
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('所有远程音效数据已清空')),
-      );
+      showToast(context, '所有远程音效数据已清空');
     }
   }
 }

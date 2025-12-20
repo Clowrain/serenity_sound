@@ -31,7 +31,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+    
+  flutter_localizations:
+    sdk: flutter
   # 音频与系统控制
   just_audio: ^0.9.36
   audio_service: ^0.18.12

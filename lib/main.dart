@@ -1,5 +1,7 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers/sound_provider.dart';
@@ -7,6 +9,7 @@ import 'services/audio_handler.dart';
 import 'services/storage_service.dart';
 import 'services/asset_cache_service.dart';
 import 'screens/home_screen.dart';
+import 'theme/serenity_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,15 +46,33 @@ class SerenityApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    // Use CupertinoApp for iOS-native feel, with Material localizations for compatibility
+    return CupertinoApp(
       title: 'Serenity Sound',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
+      theme: CupertinoThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0D0D0D),
-        useMaterial3: true,
+        primaryColor: SerenityTheme.accent,
+        scaffoldBackgroundColor: SerenityTheme.background,
+        textTheme: const CupertinoTextThemeData(
+          primaryColor: SerenityTheme.primaryText,
+        ),
       ),
-      home: const HomeScreen(),
+      // Add localizations for Material widgets compatibility
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('zh', 'CN'),
+        Locale('en', 'US'),
+      ],
+      // Wrap with Material for widgets that need MaterialLocalizations
+      home: Material(
+        color: SerenityTheme.background,
+        child: const HomeScreen(),
+      ),
     );
   }
 }
