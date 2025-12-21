@@ -79,7 +79,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     onTap: () => Navigator.push(
                       context,
                       CupertinoPageRoute(builder: (_) => const SoundManagementPage()),
-                    ),
+                    ).then((_) => _loadCacheSize()), // 返回时刷新缓存大小
                   ),
                 ],
               ),

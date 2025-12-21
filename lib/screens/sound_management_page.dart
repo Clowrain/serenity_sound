@@ -252,14 +252,80 @@ class _SoundManagementPageState extends ConsumerState<SoundManagementPage> {
       if (result.isSuccess) {
         String message = '成功添加 ${result.added.length} 个音效';
         if (result.hasConflicts) message += '\n跳过 ${result.skipped.length} 个冲突音效';
-        if (result.hasFailures) message += '\n${result.failed.length} 个音效下载失败';
+        if (result.hasFailures) {
+          message += '\n${result.failed.length} 个音效下载失败';
+          _showFailureDialog(result.failed);
+        }
         showToast(context, message, isError: result.hasFailures);
       } else {
+        if (result.hasFailures) {
+          _showFailureDialog(result.failed);
+        }
         showToast(context, result.error ?? '加载失败', isError: true);
       }
     } catch (e) {
       if (mounted) Navigator.pop(context);
       if (mounted) showToast(context, '发生错误: $e', isError: true);
     }
+  }
+
+  void _showFailureDialog(Map<String, String> failures) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(CupertinoIcons.exclamationmark_triangle, color: Colors.orangeAccent, size: 20),
+            const SizedBox(width: 8),
+            const Text('下载未完成'),
+          ],
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '以下 ${failures.length} 个音效下载失败：',
+                style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel),
+              ),
+              const SizedBox(height: 12),
+              ...failures.entries.take(10).map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.key,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    Text(
+                      entry.value,
+                      style: TextStyle(fontSize: 11, color: CupertinoColors.systemGrey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              )),
+              if (failures.length > 10)
+                Text(
+                  '还有 ${failures.length - 10} 个...',
+                  style: TextStyle(fontSize: 12, color: CupertinoColors.systemGrey),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.pop(context),
+            child: const Text('了解'),
+          ),
+        ],
+      ),
+    );
   }
 }
