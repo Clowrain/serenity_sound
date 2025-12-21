@@ -109,6 +109,7 @@ class SerenityAudioHandler extends BaseAudioHandler with SeekHandler {
   
   SerenityAudioHandler() {
     _initAudioSession();
+    _initMediaItem();
     
     playbackState.add(playbackState.value.copyWith(
       controls: [
@@ -120,6 +121,17 @@ class SerenityAudioHandler extends BaseAudioHandler with SeekHandler {
       },
       processingState: AudioProcessingState.ready,
       playing: false,
+    ));
+  }
+  
+  /// 设置控制中心显示的媒体信息（固定内容）
+  void _initMediaItem() {
+    mediaItem.add(const MediaItem(
+      id: 'serenity_sound',
+      title: 'Serenity Sound',
+      artist: '白噪音混音',
+      album: '放松 · 专注 · 睡眠',
+      artUri: null, // iOS 会使用 Info.plist 中配置的应用图标
     ));
   }
 
