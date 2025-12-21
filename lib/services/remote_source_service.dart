@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/sound_effect.dart';
 import '../providers/sound_provider.dart';
 import 'asset_cache_service.dart';
+import 'audio_handler.dart';
 import 'storage_service.dart';
 
 /// 加载结果
@@ -173,13 +174,19 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
   Future<void> removeSource(String sourceId) async {
     final source = state.firstWhere((s) => s.id == sourceId);
     
-    // 1. 从音效列表中移除
+    // 1. 清理播放器缓存
+    final handler = _ref.read(audioHandlerProvider);
+    for (final id in source.soundIds) {
+      await handler.disposeTrack(id);
+    }
+    
+    // 2. 从音效列表中移除
     _ref.read(soundListProvider.notifier).removeRemoteSounds(source.soundIds);
     
-    // 2. 清除缓存
+    // 3. 清除缓存
     await _cacheService.deleteSourceCache(source.soundIds);
     
-    // 3. 更新来源列表
+    // 4. 更新来源列表
     state = state.where((s) => s.id != sourceId).toList();
     _storage.saveRemoteSources(state);
   }
@@ -192,13 +199,17 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
     
     final source = state[sourceIndex];
     
-    // 2. 从音效列表中移除
+    // 2. 清理播放器缓存
+    final handler = _ref.read(audioHandlerProvider);
+    await handler.disposeTrack(soundId);
+    
+    // 3. 从音效列表中移除
     _ref.read(soundListProvider.notifier).removeRemoteSounds([soundId]);
     
-    // 3. 清除缓存
+    // 4. 清除缓存
     await _cacheService.deleteSourceCache([soundId]);
     
-    // 4. 更新来源记录
+    // 5. 更新来源记录
     final updatedSoundIds = source.soundIds.where((id) => id != soundId).toList();
     final updatedSource = RemoteSource(
       id: source.id,
@@ -246,16 +257,22 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
 
     if (remoteSoundIds.isEmpty) return;
 
-    // 2. 清理文件缓存
+    // 2. 清理播放器缓存
+    final handler = _ref.read(audioHandlerProvider);
+    for (final id in remoteSoundIds) {
+      await handler.disposeTrack(id);
+    }
+
+    // 3. 清理文件缓存
     await _cacheService.clearAllCache();
 
-    // 3. 从音效列表中移除
+    // 4. 从音效列表中移除
     _ref.read(soundListProvider.notifier).removeRemoteSounds(remoteSoundIds);
 
-    // 4. 从所有场景中移除这些音效
+    // 5. 从所有场景中移除这些音效
     _ref.read(sceneProvider.notifier).removeSoundIds(remoteSoundIds);
 
-    // 5. 清空远程来源记录
+    // 6. 清空远程来源记录
     state = [];
     await _storage.saveRemoteSources([]);
   }
