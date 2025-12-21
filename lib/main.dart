@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,33 +14,49 @@ import 'screens/home_screen.dart';
 import 'theme/serenity_theme.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // 全局错误处理
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  final storageService = StorageService();
-  await storageService.init();
+    // 捕获 Flutter 框架错误
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+    };
 
-  final assetCacheService = AssetCacheService();
-  await assetCacheService.init();
+    final storageService = StorageService();
+    await storageService.init();
 
-  final handler = await AudioService.init(
-    builder: () => SerenityAudioHandler(),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.serenity.sound.channel.audio',
-      androidNotificationChannelName: 'Serenity Sound Playback',
-      androidStopForegroundOnPause: true,
-    ),
-  );
+    final assetCacheService = AssetCacheService();
+    await assetCacheService.init();
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        storageServiceProvider.overrideWithValue(storageService),
-        audioHandlerProvider.overrideWithValue(handler),
-        assetCacheServiceProvider.overrideWithValue(assetCacheService),
-      ],
-      child: const SerenityApp(),
-    ),
-  );
+    final handler = await AudioService.init(
+      builder: () => SerenityAudioHandler(),
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.serenity.sound.channel.audio',
+        androidNotificationChannelName: 'Serenity Sound Playback',
+        androidStopForegroundOnPause: true,
+      ),
+    );
+
+    runApp(
+      ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(storageService),
+          audioHandlerProvider.overrideWithValue(handler),
+          assetCacheServiceProvider.overrideWithValue(assetCacheService),
+        ],
+        child: const SerenityApp(),
+      ),
+    );
+  }, (error, stack) {
+    // 忽略 just_audio 的加载中断异常
+    if (error is PlatformException && error.code == 'abort') {
+      return;
+    }
+    // 其他错误打印日志
+    debugPrint('Uncaught error: $error');
+    debugPrint('Stack trace: $stack');
+  });
 }
 
 class SerenityApp extends StatelessWidget {

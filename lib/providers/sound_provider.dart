@@ -74,6 +74,19 @@ class SoundListNotifier extends StateNotifier<List<SoundEffect>> {
   List<SoundEffect> getRemoteSounds() {
     return state.where((s) => s.isRemote).toList();
   }
+
+  /// 批量恢复音量配置
+  void applyVolumes(Map<String, double> volumes) {
+    if (volumes.isEmpty) return;
+    state = [
+      for (final sound in state)
+        if (volumes.containsKey(sound.id)) 
+          sound.copyWith(volume: volumes[sound.id]!) 
+        else 
+          sound
+    ];
+    _storage.saveSounds(state);
+  }
 }
 
 final soundListProvider = StateNotifierProvider<SoundListNotifier, List<SoundEffect>>((ref) {
@@ -125,11 +138,14 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
   }
 
   // 应用一个场景配置 (包括音效排序和音量)
-  void applyScene(SoundScene scene) {
+  Future<void> applyScene(SoundScene scene) async {
     // 1. 停止当前所有播放
     for (final id in state) {
-      _handler.stopTrack(id);
+      await _handler.stopTrack(id);
     }
+    
+    // 等待音频资源释放，避免 iOS 上的资源竞争
+    await Future.delayed(const Duration(milliseconds: 100));
     
     // 2. 恢复音效排序 (如果有保存的排序)
     if (scene.soundOrder.isNotEmpty) {
@@ -146,7 +162,7 @@ class ActiveSoundsNotifier extends StateNotifier<Set<String>> {
       if (sound.id == entry.key) {
         // 更新音量
         _ref.read(soundListProvider.notifier).updateVolume(sound.id, entry.value);
-        _handler.playTrack(sound.id, sound.audioPath, entry.value);
+        await _handler.playTrack(sound.id, sound.audioPath, entry.value);
         newActive.add(sound.id);
       }
     }
@@ -325,21 +341,58 @@ final activeSceneProvider = StateProvider<String?>((ref) => null);
 // 未选中场景时的音效排序（用于恢复）
 final unselectedSoundOrderProvider = StateProvider<List<String>>((ref) => []);
 
-// 场景选中时的原始配置（用于检测是否有修改）
-final originalSceneConfigProvider = StateProvider<Set<String>>((ref) => {});
+// 未选中场景时的音效音量（用于恢复）
+final unselectedSoundVolumesProvider = StateProvider<Map<String, double>>((ref) => {});
 
-// 检测场景是否有未保存的修改
+// 场景选中时的原始配置快照（用于检测是否有修改）
+// 包含: soundConfig (音效ID->音量) 和 soundOrder (排序)
+class SceneSnapshot {
+  final Map<String, double> soundConfig;
+  final List<String> soundOrder;
+  
+  SceneSnapshot({
+    this.soundConfig = const {},
+    this.soundOrder = const [],
+  });
+  
+  static SceneSnapshot empty() => SceneSnapshot();
+}
+
+final originalSceneSnapshotProvider = StateProvider<SceneSnapshot>((ref) => SceneSnapshot.empty());
+
+// 检测场景是否有未保存的修改（包括音效增减、音量变化、排序变化）
 final hasSceneChangesProvider = Provider<bool>((ref) {
   final activeSceneId = ref.watch(activeSceneProvider);
   if (activeSceneId == null) return false;
   
+  final snapshot = ref.watch(originalSceneSnapshotProvider);
   final currentActiveIds = ref.watch(activeSoundsProvider);
-  final originalConfig = ref.watch(originalSceneConfigProvider);
+  final allSounds = ref.watch(soundListProvider);
   
-  // 比较当前激活的音效和原始配置
-  if (currentActiveIds.length != originalConfig.length) return true;
-  return !currentActiveIds.containsAll(originalConfig) || 
-         !originalConfig.containsAll(currentActiveIds);
+  // 1. 检测音效增减
+  final originalIds = snapshot.soundConfig.keys.toSet();
+  if (currentActiveIds.length != originalIds.length) return true;
+  if (!currentActiveIds.containsAll(originalIds) || 
+      !originalIds.containsAll(currentActiveIds)) return true;
+  
+  // 2. 检测音量变化
+  for (final id in currentActiveIds) {
+    final sound = allSounds.firstWhere((s) => s.id == id, orElse: () => allSounds.first);
+    if (sound.id == id) {
+      final originalVolume = snapshot.soundConfig[id] ?? 0.5;
+      if ((sound.volume - originalVolume).abs() > 0.001) return true;
+    }
+  }
+  
+  // 3. 检测排序变化
+  final currentOrder = allSounds.map((s) => s.id).toList();
+  if (snapshot.soundOrder.isNotEmpty && currentOrder.length == snapshot.soundOrder.length) {
+    for (int i = 0; i < currentOrder.length; i++) {
+      if (currentOrder[i] != snapshot.soundOrder[i]) return true;
+    }
+  }
+  
+  return false;
 });
 
 // 初始化默认选中场景的 Provider

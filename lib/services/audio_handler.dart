@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 
 class SerenityAudioHandler extends BaseAudioHandler with SeekHandler {
@@ -37,8 +38,16 @@ class SerenityAudioHandler extends BaseAudioHandler with SeekHandler {
           } else {
             await player.setAsset(assetPath);
           }
+        } on PlatformException catch (e) {
+          // 处理加载中断异常（快速切换音效时可能发生）
+          if (e.code == 'abort') {
+            await player.dispose();
+            return;
+          }
+          rethrow;
         } catch (e) {
           print("Error loading audio source $assetPath: $e");
+          await player.dispose();
           return;
         }
 
@@ -49,6 +58,11 @@ class SerenityAudioHandler extends BaseAudioHandler with SeekHandler {
       
       if (playbackState.value.playing) {
         _players[id]?.play();
+      }
+    } on PlatformException catch (e) {
+      // 忽略加载中断异常
+      if (e.code != 'abort') {
+        print("PlatformException in playTrack: $e");
       }
     } catch (e) {
       print("Exception in playTrack: $e");

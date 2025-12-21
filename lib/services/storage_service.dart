@@ -23,24 +23,45 @@ class StorageService {
     
     final List<dynamic> storedData = box.get(_keySounds, defaultValue: []);
     
+    // 如果是首次运行（没有存储数据），直接使用 JSON 顺序
+    if (storedData.isEmpty) {
+      await box.put(_keySounds, jsonList);
+      return;
+    }
+    
     // 分离本地和远程音效
     final List<dynamic> storedRemoteSounds = storedData.where((item) => item['isRemote'] == true).toList();
-    final Map<String, dynamic> storedLocalMap = {
-      for (var item in storedData.where((item) => item['isRemote'] != true)) 
-        item['id']: item
+    final List<dynamic> storedLocalSounds = storedData.where((item) => item['isRemote'] != true).toList();
+    
+    // 创建 JSON 配置的 Map（用于获取最新配置，如 svgPath, audioPath 等）
+    final Map<String, dynamic> jsonConfigMap = {
+      for (var config in jsonList) config['id']: config
     };
-
-    // 以 JSON 配置为准同步本地音效，但保留已存储的音量
-    final syncedLocalList = jsonList.map((config) {
-      final id = config['id'];
-      if (storedLocalMap.containsKey(id)) {
-        return {
-          ...config,
-          'volume': storedLocalMap[id]['volume'] ?? config['volume'],
-        };
+    
+    // 按照用户保存的顺序更新本地音效（保留排序和音量，更新其他配置）
+    final List<dynamic> syncedLocalList = [];
+    final Set<String> processedIds = {};
+    
+    // 1. 按用户保存的顺序处理已存在的音效
+    for (final storedItem in storedLocalSounds) {
+      final id = storedItem['id'];
+      if (jsonConfigMap.containsKey(id)) {
+        // 更新配置但保留音量
+        syncedLocalList.add({
+          ...jsonConfigMap[id],
+          'volume': storedItem['volume'] ?? jsonConfigMap[id]['volume'],
+        });
+        processedIds.add(id);
       }
-      return config;
-    }).toList();
+      // 如果 JSON 中不存在该音效，跳过（被删除的音效）
+    }
+    
+    // 2. 添加 JSON 中新增的音效（追加到本地音效末尾）
+    for (final config in jsonList) {
+      if (!processedIds.contains(config['id'])) {
+        syncedLocalList.add(config);
+      }
+    }
 
     // 合并：本地音效 + 远程音效（远程音效追加在后面）
     final List<dynamic> newList = [...syncedLocalList, ...storedRemoteSounds];

@@ -127,27 +127,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                             final currentActiveId = ref.read(activeSceneProvider);
                             
                             if (isSelected) {
-                              // 取消选中：恢复未选中时的排序并停止播放
+                              // 取消选中：恢复未选中时的排序和音量，并停止播放
                               ref.read(activeSceneProvider.notifier).state = null;
-                              ref.read(originalSceneConfigProvider.notifier).state = {};
+                              ref.read(originalSceneSnapshotProvider.notifier).state = SceneSnapshot.empty();
+                              
+                              // 恢复排序
                               final unselectedOrder = ref.read(unselectedSoundOrderProvider);
                               if (unselectedOrder.isNotEmpty) {
                                 ref.read(soundListProvider.notifier).applyOrder(unselectedOrder);
                               }
+                              
+                              // 恢复音量
+                              final unselectedVolumes = ref.read(unselectedSoundVolumesProvider);
+                              if (unselectedVolumes.isNotEmpty) {
+                                ref.read(soundListProvider.notifier).applyVolumes(unselectedVolumes);
+                              }
+                              
                               ref.read(activeSoundsProvider.notifier).stopAll();
                             } else {
-                              // 如果从未选中状态切换到选中，先保存当前排序
+                              // 如果从未选中状态切换到选中，先保存当前排序和音量
                               if (currentActiveId == null) {
-                                final currentOrder = ref.read(soundListProvider).map((s) => s.id).toList();
+                                final sounds = ref.read(soundListProvider);
+                                final currentOrder = sounds.map((s) => s.id).toList();
+                                final currentVolumes = {for (final s in sounds) s.id: s.volume};
                                 ref.read(unselectedSoundOrderProvider.notifier).state = currentOrder;
+                                ref.read(unselectedSoundVolumesProvider.notifier).state = currentVolumes;
                               }
                               // 选中：应用场景并记录原始配置
                               ref.read(activeSceneProvider.notifier).state = scene.id;
                               ref.read(activeSoundsProvider.notifier).applyScene(scene);
                               ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
-                              // 记录原始音效配置
-                              ref.read(originalSceneConfigProvider.notifier).state = 
-                                  scene.soundConfig.keys.toSet();
+                              // 记录原始场景快照（配置+排序）
+                              ref.read(originalSceneSnapshotProvider.notifier).state = SceneSnapshot(
+                                soundConfig: Map<String, double>.from(scene.soundConfig),
+                                soundOrder: List<String>.from(scene.soundOrder),
+                              );
                             }
                           },
                           onDoubleTap: () => _showRenameDialog(context, ref, scene),
@@ -267,8 +281,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                               GestureDetector(
                                 onTap: () {
                                   ref.read(sceneProvider.notifier).updateScene(activeSceneId);
-                                  ref.read(originalSceneConfigProvider.notifier).state = 
-                                      ref.read(activeSoundsProvider).toSet();
+                                  // 保存后更新快照为当前状态
+                                  final allSounds = ref.read(soundListProvider);
+                                  final activeIds = ref.read(activeSoundsProvider);
+                                  final config = <String, double>{};
+                                  for (final id in activeIds) {
+                                    final sound = allSounds.firstWhere((s) => s.id == id);
+                                    config[id] = sound.volume;
+                                  }
+                                  ref.read(originalSceneSnapshotProvider.notifier).state = SceneSnapshot(
+                                    soundConfig: config,
+                                    soundOrder: allSounds.map((s) => s.id).toList(),
+                                  );
                                   showToast(context, '场景已保存');
                                 },
                                 child: Container(
@@ -507,13 +531,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
       builder: (context) => const MixerPanel(),
     ).then((_) {
       ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
-      
-      // 自动保存当前排序到选中的场景
-      final activeSceneId = ref.read(activeSceneProvider);
-      if (activeSceneId != null) {
-        ref.read(sceneProvider.notifier).updateSceneOrder(activeSceneId);
-      }
-      // 否则排序已自动保存到 soundListProvider (持久化存储)
+      // 排序变更不再自动保存到场景，需用户手动点击保存按钮
     });
   }
 
