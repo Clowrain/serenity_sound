@@ -370,10 +370,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                       icon: CupertinoIcons.slider_horizontal_3,
                       onPressed: () => _showMixerPanel(context),
                     ),
-                    ControlKnob(
-                      icon: CupertinoIcons.timer,
-                      onPressed: () => _showTimerPanel(context),
-                    ),
                     MasterButton(
                       isPlaying: isGlobalPlaying,
                       onPressed: () => isGlobalPlaying ? handler.pause() : handler.play(),
