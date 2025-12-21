@@ -22,13 +22,22 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
   late Timer _timer;
   String _timeString = "";
+  late AnimationController _colonAnimController;
+  late Animation<double> _colonOpacity;
 
   @override
   void initState() {
     super.initState();
+    _colonAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _colonOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _colonAnimController, curve: Curves.easeInOut),
+    );
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
   }
@@ -36,15 +45,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _timer.cancel();
+    _colonAnimController.dispose();
     super.dispose();
   }
 
   void _updateTime() {
-    final String formattedTime = DateFormat('HH:mm').format(DateTime.now());
+    final now = DateTime.now();
+    final String formattedTime = DateFormat('HH:mm').format(now);
     if (mounted) {
       setState(() {
         _timeString = formattedTime;
       });
+      // 切换动画方向
+      if (_colonAnimController.isCompleted) {
+        _colonAnimController.reverse();
+      } else {
+        _colonAnimController.forward();
+      }
     }
   }
 
@@ -202,9 +219,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               children: [
                                 EndingFlicker(
                                   isEnding: timerState.isEnding,
-                                  child: Text(
+                                  child: _buildTimeDisplay(
                                     (timerState.isRunning || timerState.isEnding) ? timerState.formattedTime : _timeString,
-                                    style: TextStyle(
+                                    TextStyle(
                                       fontSize: 100,
                                       fontWeight: FontWeight.w200,
                                       letterSpacing: -4,
@@ -217,9 +234,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 EndingFlicker(
                                   isEnding: timerState.isEnding,
-                                  child: Text(
+                                  child: _buildTimeDisplay(
                                     (timerState.isRunning || timerState.isEnding) ? timerState.formattedTime : _timeString,
-                                    style: const TextStyle(
+                                    const TextStyle(
                                       fontSize: 100,
                                       fontWeight: FontWeight.w200,
                                       letterSpacing: -4,
@@ -386,6 +403,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
       ),
       builder: (context) => const TimerPanel(),
+    );
+  }
+
+  // 构建带渐变冒号的时间显示
+  Widget _buildTimeDisplay(String time, TextStyle style) {
+    final parts = time.split(':');
+    if (parts.length != 2) return Text(time, style: style);
+    
+    return AnimatedBuilder(
+      animation: _colonOpacity,
+      builder: (context, child) {
+        final colonStyle = style.copyWith(
+          color: (style.color ?? Colors.white).withOpacity(_colonOpacity.value),
+        );
+        return RichText(
+          text: TextSpan(
+            style: style,
+            children: [
+              TextSpan(text: parts[0]),
+              TextSpan(text: ':', style: colonStyle),
+              TextSpan(text: parts[1]),
+            ],
+          ),
+        );
+      },
     );
   }
 
