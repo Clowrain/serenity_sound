@@ -13,7 +13,7 @@ import '../widgets/toast.dart';
 import '../theme/serenity_theme.dart';
 import 'mixer_panel.dart';
 import 'timer_panel.dart';
-import 'settings_panel.dart';
+import 'settings_page.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -479,15 +479,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showSettingsPanel(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF121212),
-      isScrollControlled: true,
-      barrierColor: Colors.black.withOpacity(0.97),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
-      ),
-      builder: (context) => const SettingsPanel(),
+    Navigator.push(
+      context,
+      CupertinoPageRoute(builder: (_) => const SettingsPage()),
     );
   }
 }
