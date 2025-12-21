@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/sound_effect.dart';
 import '../providers/sound_provider.dart';
@@ -28,104 +29,144 @@ class SceneManagementPage extends ConsumerWidget {
                   style: SerenityTheme.subheadline,
                 ),
               )
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                itemCount: scenes.length + 1, // +1 for header
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        '${scenes.length} 个场景',
-                        style: SerenityTheme.caption1,
-                      ),
-                    );
-                  }
-                  
-                  final scene = scenes[index - 1];
-                  final sceneColor = Color(int.parse(scene.color.replaceAll('#', '0xFF')));
-                  final isLast = index == scenes.length;
-                  
-                  return Column(
-                    children: [
-                      if (index == 1)
-                        Container(
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      '${scenes.length} 个场景 · 长按拖动排序',
+                      style: SerenityTheme.caption1,
+                    ),
+                  ),
+                  Expanded(
+                    child: ReorderableListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      buildDefaultDragHandles: false,
+                      proxyDecorator: (child, index, animation) {
+                        return AnimatedBuilder(
+                          animation: animation,
+                          builder: (context, child) {
+                            final elevationValue = Tween<double>(begin: 0, end: 6).animate(animation).value;
+                            return Material(
+                              elevation: elevationValue,
+                              color: SerenityTheme.secondaryBackground,
+                              borderRadius: BorderRadius.circular(12),
+                              shadowColor: Colors.black26,
+                              child: child,
+                            );
+                          },
+                          child: child,
+                        );
+                      },
+                      onReorder: (oldIndex, newIndex) {
+                        HapticFeedback.lightImpact();
+                        ref.read(sceneProvider.notifier).reorderScenes(oldIndex, newIndex);
+                      },
+                      itemCount: scenes.length,
+                      itemBuilder: (context, index) {
+                        final scene = scenes[index];
+                        final sceneColor = Color(int.parse(scene.color.replaceAll('#', '0xFF')));
+                        final isFirst = index == 0;
+                        final isLast = index == scenes.length - 1;
+                        
+                        return Container(
+                          key: ValueKey(scene.id),
                           decoration: BoxDecoration(
                             color: SerenityTheme.secondaryBackground,
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                          ),
-                        ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: SerenityTheme.secondaryBackground,
-                          borderRadius: BorderRadius.vertical(
-                            top: index == 1 ? const Radius.circular(12) : Radius.zero,
-                            bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                          ),
-                        ),
-                        child: CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => _showSceneActions(context, ref, scene),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: sceneColor.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Center(
-                                    child: Container(
-                                      width: 14,
-                                      height: 14,
-                                      decoration: BoxDecoration(
-                                        color: sceneColor,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(color: sceneColor.withOpacity(0.5), blurRadius: 4),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(scene.name, style: SerenityTheme.body),
-                                      Text(
-                                        '${scene.soundConfig.length} 个音效',
-                                        style: SerenityTheme.caption1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  CupertinoIcons.chevron_right,
-                                  color: SerenityTheme.tertiaryText,
-                                  size: 16,
-                                ),
-                              ],
+                            borderRadius: BorderRadius.vertical(
+                              top: isFirst ? const Radius.circular(12) : Radius.zero,
+                              bottom: isLast ? const Radius.circular(12) : Radius.zero,
                             ),
                           ),
-                        ),
-                      ),
-                      if (!isLast)
-                        Container(
-                          color: SerenityTheme.secondaryBackground,
-                          child: Container(
-                            margin: const EdgeInsets.only(left: 64),
-                            height: 0.5,
-                            color: SerenityTheme.separator,
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                child: Row(
+                                  children: [
+                                    // 拖动手柄
+                                    ReorderableDragStartListener(
+                                      index: index,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Icon(
+                                          CupertinoIcons.line_horizontal_3,
+                                          color: SerenityTheme.tertiaryText,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    // 场景信息
+                                    Expanded(
+                                      child: CupertinoButton(
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () => _showSceneActions(context, ref, scene),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 36,
+                                                height: 36,
+                                                decoration: BoxDecoration(
+                                                  color: sceneColor.withOpacity(0.15),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Center(
+                                                  child: Container(
+                                                    width: 14,
+                                                    height: 14,
+                                                    decoration: BoxDecoration(
+                                                      color: sceneColor,
+                                                      shape: BoxShape.circle,
+                                                      boxShadow: [
+                                                        BoxShadow(color: sceneColor.withOpacity(0.5), blurRadius: 4),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(scene.name, style: SerenityTheme.body),
+                                                    Text(
+                                                      '${scene.soundConfig.length} 个音效',
+                                                      style: SerenityTheme.caption1,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Icon(
+                                                CupertinoIcons.chevron_right,
+                                                color: SerenityTheme.tertiaryText,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 12),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!isLast)
+                                Container(
+                                  margin: const EdgeInsets.only(left: 52),
+                                  height: 0.5,
+                                  color: SerenityTheme.separator,
+                                ),
+                            ],
                           ),
-                        ),
-                    ],
-                  );
-                },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
       ),
     );

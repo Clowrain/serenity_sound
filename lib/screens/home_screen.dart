@@ -95,119 +95,106 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             children: [
               Column(
                 children: [
-                  // 场景选择器
+                  // 场景选择器（排序功能移至场景管理页）
                   const SizedBox(height: 20),
               SizedBox(
                 height: 40,
-                child: ReorderableListView.builder(
+                child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 30),
-                  buildDefaultDragHandles: false,
-                  onReorder: (oldIndex, newIndex) {
-                    ref.read(sceneProvider.notifier).reorderScenes(oldIndex, newIndex);
-                  },
                   itemCount: scenes.length + 1,
                   itemBuilder: (context, index) {
                     if (index == scenes.length) {
-                      return const KeyedSubtree(
-                        key: ValueKey('add_button'),
-                        child: AddSceneButton(),
-                      );
+                      return const AddSceneButton();
                     }
                     final scene = scenes[index];
                     final sceneColor = Color(int.parse(scene.color.replaceAll('#', '0xFF')));
                     final activeSceneId = ref.watch(activeSceneProvider);
                     final isSelected = activeSceneId == scene.id;
-                    return KeyedSubtree(
-                      key: ValueKey(scene.id),
-                      child: ReorderableDragStartListener(
-                        index: index,
-                        child: GestureDetector(
-                          onTap: () {
-                            final currentActiveId = ref.read(activeSceneProvider);
-                            
-                            if (isSelected) {
-                              // 取消选中：恢复未选中时的排序和音量，并停止播放
-                              ref.read(activeSceneProvider.notifier).state = null;
-                              ref.read(originalSceneSnapshotProvider.notifier).state = SceneSnapshot.empty();
-                              
-                              // 恢复排序
-                              final unselectedOrder = ref.read(unselectedSoundOrderProvider);
-                              if (unselectedOrder.isNotEmpty) {
-                                ref.read(soundListProvider.notifier).applyOrder(unselectedOrder);
-                              }
-                              
-                              // 恢复音量
-                              final unselectedVolumes = ref.read(unselectedSoundVolumesProvider);
-                              if (unselectedVolumes.isNotEmpty) {
-                                ref.read(soundListProvider.notifier).applyVolumes(unselectedVolumes);
-                              }
-                              
-                              ref.read(activeSoundsProvider.notifier).stopAll();
-                            } else {
-                              // 如果从未选中状态切换到选中，先保存当前排序和音量
-                              if (currentActiveId == null) {
-                                final sounds = ref.read(soundListProvider);
-                                final currentOrder = sounds.map((s) => s.id).toList();
-                                final currentVolumes = {for (final s in sounds) s.id: s.volume};
-                                ref.read(unselectedSoundOrderProvider.notifier).state = currentOrder;
-                                ref.read(unselectedSoundVolumesProvider.notifier).state = currentVolumes;
-                              }
-                              // 选中：应用场景并记录原始配置
-                              ref.read(activeSceneProvider.notifier).state = scene.id;
-                              ref.read(activeSoundsProvider.notifier).applyScene(scene);
-                              ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
-                              // 记录原始场景快照（配置+排序）
-                              ref.read(originalSceneSnapshotProvider.notifier).state = SceneSnapshot(
-                                soundConfig: Map<String, double>.from(scene.soundConfig),
-                                soundOrder: List<String>.from(scene.soundOrder),
-                              );
-                            }
-                          },
-                          onDoubleTap: () => _showRenameDialog(context, ref, scene),
-                          onLongPress: () => _confirmDeleteScene(context, ref, scene),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isSelected 
-                                  ? sceneColor.withOpacity(0.15) 
-                                  : Colors.white.withOpacity(0.03),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected ? sceneColor : Colors.white10, 
-                                width: isSelected ? 1.5 : 0.5,
-                              ),
-                              boxShadow: isSelected ? [
-                                BoxShadow(color: sceneColor.withOpacity(0.3), blurRadius: 8),
-                              ] : [],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  margin: const EdgeInsets.only(right: 8),
-                                  decoration: BoxDecoration(
-                                    color: sceneColor,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [BoxShadow(color: sceneColor.withOpacity(0.5), blurRadius: 4)],
-                                  ),
-                                ),
-                                Text(
-                                  scene.name.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 10, 
-                                    letterSpacing: 2, 
-                                    color: isSelected ? Colors.white70 : Colors.white38,
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                  ),
-                                ),
-                              ],
-                            ),
+                    return GestureDetector(
+                      onTap: () {
+                        final currentActiveId = ref.read(activeSceneProvider);
+                        
+                        if (isSelected) {
+                          // 取消选中：恢复未选中时的排序和音量，并停止播放
+                          ref.read(activeSceneProvider.notifier).state = null;
+                          ref.read(originalSceneSnapshotProvider.notifier).state = SceneSnapshot.empty();
+                          
+                          // 恢复排序
+                          final unselectedOrder = ref.read(unselectedSoundOrderProvider);
+                          if (unselectedOrder.isNotEmpty) {
+                            ref.read(soundListProvider.notifier).applyOrder(unselectedOrder);
+                          }
+                          
+                          // 恢复音量
+                          final unselectedVolumes = ref.read(unselectedSoundVolumesProvider);
+                          if (unselectedVolumes.isNotEmpty) {
+                            ref.read(soundListProvider.notifier).applyVolumes(unselectedVolumes);
+                          }
+                          
+                          ref.read(activeSoundsProvider.notifier).stopAll();
+                        } else {
+                          // 如果从未选中状态切换到选中，先保存当前排序和音量
+                          if (currentActiveId == null) {
+                            final sounds = ref.read(soundListProvider);
+                            final currentOrder = sounds.map((s) => s.id).toList();
+                            final currentVolumes = {for (final s in sounds) s.id: s.volume};
+                            ref.read(unselectedSoundOrderProvider.notifier).state = currentOrder;
+                            ref.read(unselectedSoundVolumesProvider.notifier).state = currentVolumes;
+                          }
+                          // 选中：应用场景并记录原始配置
+                          ref.read(activeSceneProvider.notifier).state = scene.id;
+                          ref.read(activeSoundsProvider.notifier).applyScene(scene);
+                          ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+                          // 记录原始场景快照（配置+排序）
+                          ref.read(originalSceneSnapshotProvider.notifier).state = SceneSnapshot(
+                            soundConfig: Map<String, double>.from(scene.soundConfig),
+                            soundOrder: List<String>.from(scene.soundOrder),
+                          );
+                        }
+                      },
+                      onDoubleTap: () => _showRenameDialog(context, ref, scene),
+                      onLongPress: () => _confirmDeleteScene(context, ref, scene),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                              ? sceneColor.withOpacity(0.15) 
+                              : Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? sceneColor : Colors.white10, 
+                            width: isSelected ? 1.5 : 0.5,
                           ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(color: sceneColor.withOpacity(0.3), blurRadius: 8),
+                          ] : [],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                color: sceneColor,
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: sceneColor.withOpacity(0.5), blurRadius: 4)],
+                              ),
+                            ),
+                            Text(
+                              scene.name.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10, 
+                                letterSpacing: 2, 
+                                color: isSelected ? Colors.white70 : Colors.white38,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
