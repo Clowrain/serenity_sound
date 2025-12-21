@@ -212,6 +212,11 @@ class SceneNotifier extends StateNotifier<List<SoundScene>> {
 
   void reorderScenes(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) newIndex -= 1;
+    if (oldIndex < 0 || oldIndex >= state.length) return;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= state.length) newIndex = state.length - 1;
+    if (oldIndex == newIndex) return;
+    
     final newList = [...state];
     final item = newList.removeAt(oldIndex);
     newList.insert(newIndex, item);
@@ -320,6 +325,23 @@ final activeSceneProvider = StateProvider<String?>((ref) => null);
 // 未选中场景时的音效排序（用于恢复）
 final unselectedSoundOrderProvider = StateProvider<List<String>>((ref) => []);
 
+// 场景选中时的原始配置（用于检测是否有修改）
+final originalSceneConfigProvider = StateProvider<Set<String>>((ref) => {});
+
+// 检测场景是否有未保存的修改
+final hasSceneChangesProvider = Provider<bool>((ref) {
+  final activeSceneId = ref.watch(activeSceneProvider);
+  if (activeSceneId == null) return false;
+  
+  final currentActiveIds = ref.watch(activeSoundsProvider);
+  final originalConfig = ref.watch(originalSceneConfigProvider);
+  
+  // 比较当前激活的音效和原始配置
+  if (currentActiveIds.length != originalConfig.length) return true;
+  return !currentActiveIds.containsAll(originalConfig) || 
+         !originalConfig.containsAll(currentActiveIds);
+});
+
 // 初始化默认选中场景的 Provider
 final initActiveSceneProvider = Provider<void>((ref) {
   final activeScene = ref.read(activeSceneProvider);
@@ -333,6 +355,7 @@ final initActiveSceneProvider = Provider<void>((ref) {
     }
   }
 });
+
 
 // --- 定时器与其他 ---
 final isGlobalPlayingProvider = StreamProvider<bool>((ref) {

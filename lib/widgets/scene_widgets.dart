@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/sound_provider.dart';
+import '../theme/serenity_theme.dart';
 
 /// 场景添加按钮及对话框
 class AddSceneButton extends ConsumerStatefulWidget {
@@ -36,7 +38,7 @@ class _AddSceneButtonState extends ConsumerState<AddSceneButton> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: const Icon(Icons.add_circle_outline_rounded, color: Colors.white10, size: 20),
+        child: Icon(CupertinoIcons.add_circled, color: Colors.white24, size: 20),
       ),
     );
   }
@@ -45,59 +47,76 @@ class _AddSceneButtonState extends ConsumerState<AddSceneButton> {
     String name = "";
     String selectedColor = _presetColors[0];
 
-    return showDialog<Map<String, dynamic>>(
+    return showCupertinoDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF161616),
-          title: const Text('保存场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: '输入场景名称',
-                  hintStyle: TextStyle(color: Colors.white24),
+        builder: (context, setState) => CupertinoAlertDialog(
+          title: const Text('保存场景'),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CupertinoTextField(
+                  autofocus: true,
+                  placeholder: '输入场景名称',
+                  placeholderStyle: TextStyle(color: CupertinoColors.systemGrey),
+                  style: const TextStyle(color: CupertinoColors.white),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.darkBackgroundGray,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  onChanged: (val) => name = val,
                 ),
-                onChanged: (val) => name = val,
-              ),
-              const SizedBox(height: 20),
-              const Text('选择颜色', style: TextStyle(color: Colors.white38, fontSize: 12)),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: _presetColors.map((color) {
-                  final isSelected = color == selectedColor;
-                  final colorValue = Color(int.parse(color.replaceAll('#', '0xFF')));
-                  return GestureDetector(
-                    onTap: () => setState(() => selectedColor = color),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: colorValue,
-                        shape: BoxShape.circle,
-                        border: isSelected 
-                            ? Border.all(color: Colors.white, width: 2)
+                const SizedBox(height: 16),
+                Text(
+                  '选择颜色',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _presetColors.map((color) {
+                    final isSelected = color == selectedColor;
+                    final colorValue = Color(int.parse(color.replaceAll('#', '0xFF')));
+                    return GestureDetector(
+                      onTap: () => setState(() => selectedColor = color),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: colorValue,
+                          shape: BoxShape.circle,
+                          border: isSelected 
+                              ? Border.all(color: Colors.white, width: 2)
+                              : null,
+                          boxShadow: [
+                            BoxShadow(color: colorValue.withOpacity(0.3), blurRadius: 4),
+                          ],
+                        ),
+                        child: isSelected 
+                            ? Icon(CupertinoIcons.checkmark, color: Colors.white, size: 14)
                             : null,
-                        boxShadow: [BoxShadow(color: colorValue.withOpacity(0.4), blurRadius: 6)],
                       ),
-                      child: isSelected 
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
-                          : null,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-            TextButton(
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () => Navigator.pop(context),
+              child: const Text('取消'),
+            ),
+            CupertinoDialogAction(
               onPressed: () => Navigator.pop(context, {'name': name, 'color': selectedColor}),
               child: const Text('保存'),
             ),

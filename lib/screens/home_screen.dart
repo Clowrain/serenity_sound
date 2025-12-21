@@ -57,6 +57,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isGlobalPlaying = ref.watch(isGlobalPlayingProvider).value ?? false;
     final timerState = ref.watch(timerProvider);
     final top12 = sounds.take(12).toList();
+    final hasSceneChanges = ref.watch(hasSceneChangesProvider);
+    final activeSceneId = ref.watch(activeSceneProvider);
 
     return Scaffold(
       backgroundColor: SerenityTheme.background,
@@ -72,10 +74,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              // 场景选择器
-              const SizedBox(height: 20),
+              Column(
+                children: [
+                  // 场景选择器
+                  const SizedBox(height: 20),
               SizedBox(
                 height: 40,
                 child: ReorderableListView.builder(
@@ -108,6 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             if (isSelected) {
                               // 取消选中：恢复未选中时的排序并停止播放
                               ref.read(activeSceneProvider.notifier).state = null;
+                              ref.read(originalSceneConfigProvider.notifier).state = {};
                               final unselectedOrder = ref.read(unselectedSoundOrderProvider);
                               if (unselectedOrder.isNotEmpty) {
                                 ref.read(soundListProvider.notifier).applyOrder(unselectedOrder);
@@ -119,10 +124,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 final currentOrder = ref.read(soundListProvider).map((s) => s.id).toList();
                                 ref.read(unselectedSoundOrderProvider.notifier).state = currentOrder;
                               }
-                              // 选中：应用场景
+                              // 选中：应用场景并记录原始配置
                               ref.read(activeSceneProvider.notifier).state = scene.id;
                               ref.read(activeSoundsProvider.notifier).applyScene(scene);
                               ref.read(activeSoundsProvider.notifier).cleanupNonTop12();
+                              // 记录原始音效配置
+                              ref.read(originalSceneConfigProvider.notifier).state = 
+                                  scene.soundConfig.keys.toSet();
                             }
                           },
                           onDoubleTap: () => _showRenameDialog(context, ref, scene),
@@ -235,6 +243,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
+                            // 保存按钮（有修改时显示）
+                            if (hasSceneChanges && activeSceneId != null) ...[
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () {
+                                  ref.read(sceneProvider.notifier).updateScene(activeSceneId);
+                                  ref.read(originalSceneConfigProvider.notifier).state = 
+                                      ref.read(activeSoundsProvider).toSet();
+                                  showToast(context, '场景已保存');
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.06),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.1),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        CupertinoIcons.arrow_down_doc,
+                                        color: Colors.white38,
+                                        size: 12,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        '保存场景',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          letterSpacing: 1,
+                                          color: Colors.white38,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -318,6 +368,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ],
+          ), // End of Column
+        ], // End of Stack children
           ),
         ),
       ),
@@ -338,20 +390,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _confirmDeleteScene(BuildContext context, WidgetRef ref, SoundScene scene) {
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161616),
-        title: const Text('删除场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
-        content: Text('确定要删除 "${scene.name}" 吗？', style: const TextStyle(color: Colors.white38)),
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('删除场景'),
+        content: Text('确定要删除 "${scene.name}" 吗？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-          TextButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
             onPressed: () {
               ref.read(sceneProvider.notifier).deleteScene(scene.id);
               Navigator.pop(context);
             },
-            child: const Text('删除', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('删除'),
           ),
         ],
       ),
@@ -360,39 +416,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showRenameDialog(BuildContext context, WidgetRef ref, SoundScene scene) {
     final controller = TextEditingController(text: scene.name);
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161616),
-        title: const Text('编辑场景', style: TextStyle(color: Colors.white70, fontSize: 16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: '输入场景名称',
-                hintStyle: TextStyle(color: Colors.white24),
-              ),
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('重命名场景'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: CupertinoTextField(
+            controller: controller,
+            autofocus: true,
+            placeholder: '输入新名称',
+            placeholderStyle: TextStyle(color: CupertinoColors.systemGrey),
+            style: const TextStyle(color: CupertinoColors.white),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: CupertinoColors.darkBackgroundGray,
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(height: 16),
-            // 覆盖保存按钮
-            TextButton.icon(
-              onPressed: () {
-                ref.read(sceneProvider.notifier).updateScene(scene.id);
-                Navigator.pop(context);
-                showToast(context, '已保存到 "${scene.name}"');
-              },
-              icon: const Icon(Icons.save_rounded, size: 16, color: Colors.white54),
-              label: const Text('覆盖保存当前配置', style: TextStyle(color: Colors.white54, fontSize: 12)),
-            ),
-          ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-          TextButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          CupertinoDialogAction(
             onPressed: () {
               final newName = controller.text.trim();
               if (newName.isNotEmpty) {
@@ -400,7 +449,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
               Navigator.pop(context);
             },
-            child: const Text('保存名称'),
+            child: const Text('保存'),
           ),
         ],
       ),
