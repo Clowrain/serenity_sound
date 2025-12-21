@@ -111,7 +111,21 @@ class RemoteSourceService extends StateNotifier<List<RemoteSource>> {
           soundIds.add(rawSound.id);
         } catch (e) {
           print('Failed to download assets for ${rawSound.name}: $e');
-          failed[rawSound.name] = e.toString();
+          // 转换为用户友好的错误信息
+          String errorMessage;
+          final errorStr = e.toString().toLowerCase();
+          if (errorStr.contains('404')) {
+            errorMessage = '资源不存在';
+          } else if (errorStr.contains('timeout') || errorStr.contains('timed out')) {
+            errorMessage = '连接超时';
+          } else if (errorStr.contains('network') || errorStr.contains('connection')) {
+            errorMessage = '网络连接失败';
+          } else if (errorStr.contains('permission') || errorStr.contains('forbidden') || errorStr.contains('403')) {
+            errorMessage = '无访问权限';
+          } else {
+            errorMessage = '下载失败';
+          }
+          failed[rawSound.name] = errorMessage;
           continue;
         }
       }
