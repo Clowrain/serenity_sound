@@ -21,6 +21,20 @@ class StorageService {
     final String jsonString = await rootBundle.loadString('assets/config/sounds.json');
     final List<dynamic> jsonList = json.decode(jsonString);
     
+    // 首先初始化默认场景（如果不存在）
+    if (box.get(_keyScenes) == null) {
+      final defaultScenes = [
+        {
+          'id': 'scene_nature',
+          'name': '大自然',
+          'soundConfig': {'nature_campfire': 0.6, 'nature_river': 0.4},
+          'soundOrder': <String>[],
+          'color': '#38f9d7'
+        }
+      ];
+      await box.put(_keyScenes, defaultScenes);
+    }
+    
     final List<dynamic> storedData = box.get(_keySounds, defaultValue: []);
     
     // 如果是首次运行（没有存储数据），直接使用 JSON 顺序
@@ -67,20 +81,6 @@ class StorageService {
     final List<dynamic> newList = [...syncedLocalList, ...storedRemoteSounds];
 
     await box.put(_keySounds, newList);
-
-    if (box.get(_keyScenes) == null) {
-      // 只保留示例场景，不再有"默认"场景
-      final defaultScenes = [
-        {
-          'id': 'scene_nature',
-          'name': '大自然',
-          'soundConfig': {'nature_campfire': 0.6, 'nature_river': 0.4},
-          'soundOrder': <String>[],
-          'color': '#38f9d7'
-        }
-      ];
-      await box.put(_keyScenes, defaultScenes);
-    }
   }
 
   List<SoundEffect> getSounds() {
