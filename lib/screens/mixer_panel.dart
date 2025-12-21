@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/sound_provider.dart';
 import '../widgets/svg_icon.dart';
@@ -161,12 +162,15 @@ class MixerPanel extends ConsumerWidget {
                             // Drag handle
                             ReorderableDragStartListener(
                               index: index,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Icon(
-                                  CupertinoIcons.line_horizontal_3,
-                                  color: SerenityTheme.tertiaryText,
-                                  size: 18,
+                              child: GestureDetector(
+                                onLongPressStart: (_) => HapticFeedback.mediumImpact(),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Icon(
+                                    CupertinoIcons.line_horizontal_3,
+                                    color: SerenityTheme.tertiaryText,
+                                    size: 18,
+                                  ),
                                 ),
                               ),
                             ),
