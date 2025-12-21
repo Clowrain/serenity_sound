@@ -74,7 +74,25 @@ class MixerPanel extends ConsumerWidget {
               itemCount: sounds.length,
               buildDefaultDragHandles: false,
               padding: const EdgeInsets.symmetric(horizontal: 16),
+              // 拖动时的视觉效果
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    final elevationValue = Tween<double>(begin: 0, end: 8).animate(animation).value;
+                    return Material(
+                      elevation: elevationValue,
+                      color: SerenityTheme.secondaryBackground,
+                      borderRadius: BorderRadius.circular(SerenityTheme.radiusMedium),
+                      shadowColor: Colors.black26,
+                      child: child,
+                    );
+                  },
+                  child: child,
+                );
+              },
               onReorder: (oldIndex, newIndex) {
+                HapticFeedback.lightImpact();
                 ref.read(soundListProvider.notifier).reorder(oldIndex, newIndex);
               },
               itemBuilder: (context, index) {
@@ -159,21 +177,8 @@ class MixerPanel extends ConsumerWidget {
                               ),
                             ),
                             
-                            // Drag handle
-                            ReorderableDragStartListener(
-                              index: index,
-                              child: GestureDetector(
-                                onLongPressStart: (_) => HapticFeedback.mediumImpact(),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: Icon(
-                                    CupertinoIcons.line_horizontal_3,
-                                    color: SerenityTheme.tertiaryText,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            // Drag handle（带长按视觉反馈）
+                            _DragHandle(index: index),
                           ],
                         ),
                       ),
@@ -207,6 +212,68 @@ class MixerPanel extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 带有触摸视觉反馈的拖动手柄
+class _DragHandle extends StatefulWidget {
+  final int index;
+  
+  const _DragHandle({required this.index});
+  
+  @override
+  State<_DragHandle> createState() => _DragHandleState();
+}
+
+class _DragHandleState extends State<_DragHandle> {
+  bool _isPressed = false;
+  
+  @override
+  Widget build(BuildContext context) {
+    return ReorderableDragStartListener(
+      index: widget.index,
+      // 使用 Listener 而不是 GestureDetector，避免手势冲突
+      child: Listener(
+        onPointerDown: (_) {
+          HapticFeedback.selectionClick();
+          setState(() => _isPressed = true);
+        },
+        onPointerUp: (_) {
+          setState(() => _isPressed = false);
+        },
+        onPointerCancel: (_) {
+          setState(() => _isPressed = false);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          child: AnimatedScale(
+            scale: _isPressed ? 1.1 : 1.0,
+            duration: const Duration(milliseconds: 100),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: _isPressed 
+                    ? SerenityTheme.accent.withValues(alpha: 0.3)
+                    : SerenityTheme.tertiaryBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: _isPressed 
+                    ? Border.all(color: SerenityTheme.accent, width: 1.5)
+                    : null,
+              ),
+              child: Icon(
+                CupertinoIcons.line_horizontal_3,
+                color: _isPressed 
+                    ? SerenityTheme.accent 
+                    : SerenityTheme.secondaryText,
+                size: 20,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
