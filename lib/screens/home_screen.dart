@@ -205,6 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
               Expanded(
                 flex: 3,
                 child: GestureDetector(
+                  onTap: () => _showTimerPanel(context), // 点击显示定时器面板
                   onDoubleTap: () => isGlobalPlaying ? handler.pause() : handler.play(),
                   child: Center(
                     child: Padding(

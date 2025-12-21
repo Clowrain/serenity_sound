@@ -104,7 +104,10 @@ class _TimerPanelState extends ConsumerState<TimerPanel> {
                   child: CupertinoButton(
                     color: SerenityTheme.systemRed.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(SerenityTheme.radiusMedium),
-                    onPressed: () => ref.read(timerProvider.notifier).cancel(),
+                    onPressed: () {
+                      ref.read(timerProvider.notifier).cancel();
+                      Navigator.pop(context);
+                    },
                     child: Text(
                       '取消定时',
                       style: SerenityTheme.headline.copyWith(
