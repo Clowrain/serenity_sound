@@ -221,4 +221,4 @@ flutter run -d android
 
 ## 📄 开源协议
 
-[MIT License](LICENSE) © 2024 Serenity Sound
+[MIT License](LICENSE) © 2025 Serenity Sound
