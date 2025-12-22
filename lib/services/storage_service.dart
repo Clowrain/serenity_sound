@@ -23,16 +23,7 @@ class StorageService {
     
     // 首先初始化默认场景（如果不存在）
     if (box.get(_keyScenes) == null) {
-      final defaultScenes = [
-        {
-          'id': 'scene_nature',
-          'name': '大自然',
-          'soundConfig': {'nature_campfire': 0.6, 'nature_river': 0.4},
-          'soundOrder': <String>[],
-          'color': '#38f9d7'
-        }
-      ];
-      await box.put(_keyScenes, defaultScenes);
+      await box.put(_keyScenes, <Map<String, dynamic>>[]);
     }
     
     final List<dynamic> storedData = box.get(_keySounds, defaultValue: []);
