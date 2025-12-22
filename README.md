@@ -15,9 +15,12 @@
 
 <p align="center">
   <!-- 首页截图 -->
-  <img src="screenshots/home.png" width="280" alt="首页">
-  <img src="screenshots/mixer.png" width="280" alt="混音器">
-  <img src="screenshots/settings.png" width="280" alt="设置">
+  <img src="docs/screenshots/home.png" width="280" alt="首页">
+  <img src="docs/screenshots/home1.png" width="280" alt="场景播放">
+  <img src="docs/screenshots/home2.png" width="280" alt="定时器">
+  <img src="docs/screenshots/mixer.png" width="280" alt="混音器">
+  <img src="docs/screenshots/settings.png" width="280" alt="设置">
+  <img src="docs/screenshots/settings2.png" width="280" alt="下载音效包">
 </p>
 
 ---
