@@ -11,6 +11,17 @@
 
 ---
 
+## 📸 应用截图
+
+<p align="center">
+  <!-- 首页截图 -->
+  <img src="screenshots/home.png" width="280" alt="首页">
+  <img src="screenshots/mixer.png" width="280" alt="混音器">
+  <img src="screenshots/settings.png" width="280" alt="设置">
+</p>
+
+---
+
 ## 🎯 项目简介
 
 Serenity Sound 是一款跨平台白噪音混音应用，采用 iOS 原生设计语言（Cupertino），提供沉浸式的环境音效体验。支持多音效同时播放、场景保存与恢复、睡眠定时器等功能。
@@ -196,6 +207,12 @@ flutter run -d android
 | Android | ✅ | 通知栏控制 |
 | iOS | ✅ | 控制中心 |
 | macOS | ✅ | 菜单栏 |
+
+---
+
+## 🙏 鸣谢
+
+- **音效资源**: 本项目的音效文件来源于 [Moodist](https://github.com/remvze/moodist)，一个优秀的开源白噪音应用。
 
 ---
 
